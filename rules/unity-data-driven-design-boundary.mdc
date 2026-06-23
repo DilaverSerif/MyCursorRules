@@ -1,27 +1,27 @@
 ---
-description: Data-driven tasarım, config authoring ve runtime data sınırları
+description: Data-driven design, config authoring, and runtime data boundaries
 globs: Assets/Game/**/*Config*.cs, Assets/Game/**/*Authoring*.cs, Assets/Game/Domain/**/*.cs, Assets/Game/Application/**/*.cs
 alwaysApply: false
 ---
 
 # Unity Data-Driven Design Boundary
 
-- Tuning değeri, economy price, spawn table, reward table, duration, threshold ve designer-editable içerik config/data üzerinden gelmeli.
-- Kritik invariant ve gameplay bütünlüğü yalnızca authoring data'ya bırakılmamalı; `Domain` veya `Application` içinde doğrulanmalı.
-- Magic number kullanma; sayının niyeti config, constant, value object veya policy adıyla görünür olmalı.
-- Runtime state ile authoring/config data ayrılmalı; `ScriptableObject` runtime mutable state deposu olmamalı.
-- `Application` validated config contract tüketmeli; raw `ScriptableObject`, JSON DTO veya Addressables key bilmemeli.
-- Config validation editor-time ve startup-time aşamalarında yapılmalı; invalid config sessiz fallback ile gizlenmemeli.
-- Data-driven branch gerekiyorsa config modelinde açık `type`, `kind` veya policy alanı kullan; string compare ile gameplay davranışı seçme.
-- Config değerleri UI display metni, localization key ve gameplay ID rollerini aynı anda taşımamalı.
+- Tuning values, economy prices, spawn tables, reward tables, durations, thresholds, and designer-editable content should come from config/data.
+- Critical invariants and gameplay integrity must not be delegated only to authoring data; validate them in `Domain` or `Application`.
+- Do not use magic numbers; expose intent through config, constants, value objects, or policy names.
+- Keep runtime state separate from authoring/config data; `ScriptableObject` must not become runtime mutable state storage.
+- `Application` should consume validated config contracts; it should not know raw `ScriptableObject`, JSON DTO, or Addressables keys.
+- Run config validation at editor time and startup time; do not hide invalid config behind silent fallback.
+- If data-driven branching is needed, use an explicit `type`, `kind`, or policy field in the config model; do not select gameplay behavior with string compares.
+- Config values must not simultaneously act as UI display text, localization keys, and gameplay IDs.
 
 ## Example
 
 ```csharp
-// BAD: Magic number ve raw state mutasyonu
+// BAD: Magic numbers and raw state mutation
 return player.Level >= 7 && player.Coins >= 250;
 
-// GOOD: Niyeti açık contract ve policy
+// GOOD: Explicit contract and policy
 var requirement = catalog.GetRequirement(upgradeId);
 return purchasePolicy.CanBuy(player, requirement);
 ```

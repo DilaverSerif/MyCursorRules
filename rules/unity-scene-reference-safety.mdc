@@ -1,28 +1,28 @@
 ---
-description: Scene referans güvenliği ve fail-fast doğrulama
+description: Scene reference safety and fail-fast validation
 globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Bootstrap/**/*.cs, Assets/Game/Editor/**/*.cs
 alwaysApply: false
 ---
 
 # Scene Reference Safety
 
-- Kritik `[SerializeField]` referansları `Awake`/`Start` başında toplu doğrula; eksik wiring'i sessiz null-check zinciriyle gizleme.
-- Eksik zorunlu referansta bağlamlı `Debug.LogError` üret ve component akışını güvenli şekilde durdur.
-- Optional referans ile zorunlu referansı ayır; log mesajında owner object, field adı ve beklenen rol görünsün.
-- Runtime'da eksik referansı otomatik `Find` ile yamamaya çalışma; düzeltme scene/prefab wiring veya DI kaydında yapılır.
-- Editor'de authoring hatalarını erken yakalamak için uygun yerde `OnValidate` veya editor tooling doğrulaması kullan.
-- Toplu scene/tool değişikliklerinde `Undo`, `SetDirty` ve prefab save akışı korunmalı.
+- Validate critical `[SerializeField]` references in a batch at the start of `Awake`/`Start`; do not hide broken wiring behind silent null-check chains.
+- For a missing required reference, log contextual `Debug.LogError` and stop the component flow safely.
+- Separate optional references from required references; log messages should include owner object, field name, and expected role.
+- Do not patch missing runtime references with automatic `Find`; the fix belongs in scene/prefab wiring or DI registration.
+- Use `OnValidate` or editor tooling validation where appropriate to catch authoring mistakes early.
+- Bulk scene/tool changes must preserve `Undo`, `SetDirty`, and prefab save flow.
 
 ## Example
 
 ```csharp
-// BAD: Eksik referans sessiz geçiliyor
+// BAD: Missing reference is silently ignored
 if (_moneyText != null) _moneyText.text = "0";
 
-// GOOD: Zorunlu referans fail-fast doğrulanıyor
+// GOOD: Required reference fails fast
 if (_moneyText == null)
 {
-    Debug.LogError("UIManager._moneyText referansı eksik.");
+    Debug.LogError("UIManager._moneyText reference is missing.");
     enabled = false;
 }
 ```

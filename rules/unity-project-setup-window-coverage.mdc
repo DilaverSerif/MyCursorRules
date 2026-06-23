@@ -1,23 +1,23 @@
 ---
-description: Yeni sistemlerin setup gereksinimlerini Project Setup penceresine yansıt
+description: Reflect new system setup requirements in the Project Setup window
 globs: Assets/Game/Editor/**/*Setup*.cs, Assets/Game/**/*Config*.cs, Assets/Game/Bootstrap/**/*.cs, Assets/Game/Infrastructure/**/*.cs
 alwaysApply: false
 ---
 
 # Unity Project Setup Window Coverage
 
-- Yeni SDK, servis, feature veya bootstrap akışı eklenince çalışması için gereken dosya/ayarlar değerlendirilmeli.
-- Zorunlu config asset, credential file, path veya manuel setup adımı varsa `ProjectSetupEditorWindow` içinde requirement kalemi ekle.
-- Requirement `Evaluate` ile görünür durum üretmeli ve kullanıcıya düzeltilebilir kısa açıklama sunmalı.
-- Mümkünse `Ping`, `RevealInFinder` veya ilgili asset'e odaklama gibi hızlı erişim sağla.
-- Dosya tabanlı requirement'larda beklenen path sabit ve açık olmalı.
-- Aynı setup komutu tekrar çalıştığında veri bozmamalı; idempotent davranmalı.
+- When adding a new SDK, service, feature, or bootstrap flow, evaluate the files/settings required for it to work.
+- If a required config asset, credential file, path, or manual setup step exists, add a requirement item to `ProjectSetupEditorWindow`.
+- A requirement should produce visible status through `Evaluate` and provide a short fixable description.
+- Provide fast access when possible through `Ping`, `RevealInFinder`, or focusing the relevant asset.
+- File-based requirements should state the expected path clearly.
+- Running the same setup command repeatedly must not corrupt data; keep it idempotent.
 
 ## Example
 
 ```csharp
-// BAD: PaymentConfig zorunlu ama setup kontrolü yok
+// BAD: PaymentConfig is required, but setup does not check it
 
-// GOOD: Requirement görünür ve doğrulanabilir
+// GOOD: Requirement is visible and verifiable
 _requirements.Add(new PaymentConfigSetupRequirement());
 ```

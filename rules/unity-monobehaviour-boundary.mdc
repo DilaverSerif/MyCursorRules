@@ -1,31 +1,31 @@
 ---
-description: MonoBehaviour sınırını view, scene adapter ve Unity lifecycle ile kısıtlama kuralları
+description: Restrict MonoBehaviour to views, scene adapters, and Unity lifecycle boundaries
 globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Bootstrap/**/*.cs
 alwaysApply: false
 ---
 
 # Unity MonoBehaviour Boundary
 
-- `MonoBehaviour` yalnızca Unity boundary için kullanılsın: `[SerializeField]` scene referansı, `Transform`/`GameObject`, Unity callback, coroutine, animation/tween veya input adapter.
-- `View : MonoBehaviour` scene referanslarını, UI state'ini, animasyonu, visibility/state apply ve input intent emission işlerini yapar.
-- `Controller` ve `Presenter` varsayılan olarak plain C# olmalı; `MonoBehaviour` gerekiyorsa sebep Unity lifecycle veya scene referansı olmalı.
-- `Presenter` event dinler, state okur ve view update eder; save/load, ekonomi, satın alma veya quest progress kararı vermez.
-- Plain controller/presenter dependency'lerini constructor ile alır ve view'e `Bind`, `Initialize`, `RefreshInitialState`, `Dispose` gibi açık lifecycle methodlarıyla bağlanır.
-- `MonoBehaviour` içinde `FindAnyObjectByType`, `container.Resolve` veya service locator fallback ile servis çekme; dependency'leri scope kaydı ve injection sağlar.
-- Subscribe olunan her event için lifecycle sonunda `Dispose` veya eşdeğer unsubscribe uygula.
-- Büyüyen bir `*Controller : MonoBehaviour` dosyasında Unity-boundary kodunu `*View` içine, application akışını plain `*Controller` veya `*Presenter` içine ayır.
+- Use `MonoBehaviour` only for Unity boundaries: `[SerializeField]` scene references, `Transform`/`GameObject`, Unity callbacks, Coroutines, animation/tweening, or input adapters.
+- `View : MonoBehaviour` manages scene references, UI state, animation, visibility/state application, and input intent emission.
+- `Controller` and `Presenter` should default to plain C#; a `MonoBehaviour` version needs a Unity lifecycle or scene-reference reason.
+- `Presenter` may listen to events, read state, and update views; it must not decide save/load, economy, purchase, or quest progress rules.
+- Plain controllers/presenters receive dependencies through constructors and bind to views through explicit lifecycle methods such as `Bind`, `Initialize`, `RefreshInitialState`, and `Dispose`.
+- Do not pull services from `MonoBehaviour` with `FindAnyObjectByType`, `container.Resolve`, or service locator fallback; scope registration and injection provide dependencies.
+- Every event subscription must be disposed or unsubscribed at lifecycle end.
+- If a `*Controller : MonoBehaviour` grows, move Unity-boundary code into `*View` and application flow into a plain `*Controller` or `*Presenter`.
 
 ## Example
 
 ```csharp
-// BAD: MonoBehaviour hem view hem application orchestration yapıyor
+// BAD: MonoBehaviour mixes view and application orchestration
 private void OnBuyClicked()
 {
     var result = _shopService.TryBuy();
     _statusText.text = result.Message;
 }
 
-// GOOD: View intent bildirir, plain controller use case çağırır
+// GOOD: View emits intent; plain controller calls the use case
 public sealed class ShopView : MonoBehaviour
 {
     public event Action BuyRequested;

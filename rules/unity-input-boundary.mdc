@@ -1,28 +1,28 @@
 ---
-description: Unity input callbackleri ile application/use case arasindaki sinirlar
+description: Boundaries between Unity input callbacks and application/use case flow
 globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs
 alwaysApply: false
 ---
 
 # Input Boundary
 
-- Unity Input System, pointer, click, keyboard, touch ve gesture callback'leri yalnizca Presentation adapter icinde okunmalidir.
-- Input callback icinde gameplay state mutate etme; input intent'i presenter/controller/use case'e acik method veya event olarak ilet.
-- Input action isimleri, binding ve device kararlarinin authoring/config tarafinda kalmasini sagla; `Application` input device veya Unity callback bilmez.
-- Debounce, double-click, hold, drag threshold gibi UI gesture yorumlari Presentation'da; gameplay gecerlilik karari UseCase/Application'da kalir.
-- Input subscription lifecycle'i acik olmalidir; `OnEnable`/`OnDisable` veya owner cancellation ile unsubscribe garanti edilir.
-- Input'tan gelen ID, index veya pointer target dogrulanmadan use case'e gecirilmemelidir; stabil domain ID kullan.
+- Read Unity Input System, pointer, click, keyboard, touch, and gesture callbacks only inside Presentation adapters.
+- Do not mutate gameplay state inside input callbacks; forward input intent to a presenter/controller/use case through an explicit method or event.
+- Keep input action names, bindings, and device choices on the authoring/config side; `Application` must not know input devices or Unity callbacks.
+- Interpret UI gestures such as debounce, double-click, hold, and drag threshold in Presentation; gameplay validity stays in UseCase/Application.
+- Input subscription lifecycle must be explicit; guarantee unsubscribe through `OnEnable`/`OnDisable` or owner cancellation.
+- Do not pass IDs, indexes, or pointer targets from input to a use case without validation; use stable domain IDs.
 
 ## Example
 
 ```csharp
-// BAD: Button callback dogrudan state mutate ediyor
+// BAD: Button callback mutates state directly
 public void OnUpgradeClicked()
 {
     _state.Money -= 100;
 }
 
-// GOOD: Input intent use case/presenter akisine tasinir
+// GOOD: Input intent moves into presenter/use case flow
 public void OnUpgradeClicked()
 {
     _presenter.RequestBuyUpgrade(_upgradeId);

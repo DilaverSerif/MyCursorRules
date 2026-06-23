@@ -1,27 +1,27 @@
 ---
-description: OOP sınıf tasarımı, sorumluluk ve kalıtım guardrail kuralları
+description: OOP class design, responsibility, and inheritance guardrails
 globs: Assets/Game/Domain/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Infrastructure/**/*.cs
 alwaysApply: false
 ---
 
 # Unity OOP Design Guardrails
 
-- Sınıf adı sorumluluğunu açık anlatmalı; belirsiz `Manager`, `Helper`, `Util`, `System`, `Handler` isimleri büyüyen sorumluluk kokusudur.
-- Domain/Application modellerinde public mutable field kullanma; invariant'ları constructor, factory veya niyeti açık mutation metotları korusun.
-- Collection'ları dışarıya read-only view olarak aç; mutation gerekiyorsa anlamlı metot üzerinden yap.
-- Interface'i her class için otomatik oluşturma; consumer tarafında port, test seam, replaceable policy veya cross-layer boundary gerektiğinde tanımla.
-- Deep inheritance ve optional davranış taşıyan base class yerine küçük policy/service composition tercih et.
-- Büyümesi beklenen varyantlarda dev switch/if zinciri yerine policy, strategy, polymorphism veya validated config kullan.
-- Constructor yalnızca dependency atama ve invariant validation yapmalı; IO, asset loading, event subscription, async work veya gameplay side effect başlatmamalı.
-- Static method yalnızca pure helper/value calculation için kabul edilir; runtime state, scene object, service veya config erişimi static üzerinden yapılmaz.
+- Class names should state responsibility clearly; vague names such as `Manager`, `Helper`, `Util`, `System`, and `Handler` indicate growing responsibility.
+- Do not use public mutable fields in Domain/Application models; preserve invariants through constructors, factories, or intention-revealing mutation methods.
+- Expose collections as read-only views; if mutation is needed, use meaningful methods.
+- Do not create an interface for every class automatically; define interfaces at the consumer side when a port, test seam, replaceable policy, or cross-layer boundary is needed.
+- Prefer small policy/service composition over deep inheritance and base classes with optional behavior.
+- For variants expected to grow, prefer policy, strategy, polymorphism, or validated config over large switch/if chains.
+- Constructors should only assign dependencies and validate invariants; do not start IO, asset loading, event subscription, async work, or gameplay side effects.
+- Static methods are acceptable only for pure helpers/value calculations; do not access runtime state, scene objects, services, or config through statics.
 
 ## Example
 
 ```csharp
-// BAD: Dışarıdan korumasız state mutasyonu
+// BAD: State can be mutated from outside
 public int Coins;
 
-// GOOD: Invariant state içinde korunur
+// GOOD: The invariant is protected inside the state object
 public void Spend(CurrencyAmount price)
 {
     if (price.Amount > Coins) throw new InvalidOperationException();

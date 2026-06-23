@@ -1,26 +1,26 @@
 ---
-description: Unity Domain/Application test kapsamı ve deterministik test standartları
+description: Unity Domain/Application test coverage and deterministic test standards
 alwaysApply: true
 ---
 
 # Unity Testing Core
 
-- `Domain` ve `Application` davranışları için varsayılan test türü `EditMode` olmalı; `PlayMode` yalnızca scene, prefab, input adapter, UI rendering veya Unity lifecycle riski varsa kullanılmalı.
-- Yeni `UseCase` veya application service davranışı success path, beklenen failure path ve state mutation sonucunu doğrulamalı; event üretiyorsa event payload'ı da assert edilmeli.
-- Testler implementation detail, private method veya geçici UI hierarchy detayını değil kullanıcıya/feature'a görünen davranışı ölçmeli.
-- Gerçek zaman, random, dosya sistemi, network, Addressables, `Resources`, `GameObject`, `MonoBehaviour` veya frame count Domain/Application testlerine girmemeli; fake, stub veya in-memory implementation kullan.
-- Bug fix davranış değiştiriyorsa regression test ekle; doc-only, asset-only, rename veya mekanik refactor işlerinde test eklenmiyorsa final notunda gerekçe belirt.
-- Test isimleri davranışı anlatmalı: `Method_ExpectedResult_WhenCondition` veya okunabilir cümle formatı kabul edilir.
-- Async testlerde cancellation ve failure path görünür olmalı; fire-and-forget test kodu yazma.
-- Test-only public API açma; gerekiyorsa `InternalsVisibleTo` kontrollü ve gerekçeli kullanılmalı.
+- Use `EditMode` tests by default for `Domain` and `Application` behavior; use `PlayMode` only for scene, prefab, input adapter, UI rendering, or Unity lifecycle risk.
+- New `UseCase` or application service behavior should verify success path, expected failure path, and state mutation result; if it emits events, assert the event payload too.
+- Tests should verify behavior visible to the user/feature, not implementation details, private methods, or transient UI hierarchy details.
+- Real time, random, filesystem, network, Addressables, `Resources`, `GameObject`, `MonoBehaviour`, and frame counts must not enter Domain/Application tests; use fake, stub, or in-memory implementations.
+- If a bug fix changes behavior, add a regression test; if doc-only, asset-only, rename, or mechanical refactor work does not add tests, explain why in the final note.
+- Test names should describe behavior: `Method_ExpectedResult_WhenCondition` or a readable sentence format is acceptable.
+- Async tests must make cancellation and failure paths visible; do not write fire-and-forget test code.
+- Do not open test-only public APIs; use `InternalsVisibleTo` only when controlled and justified.
 
 ## Example
 
 ```csharp
-// BAD: Global zaman/random ve sadece dönüş değeri varsayımı
+// BAD: Global time/random and only return-value assumption
 var reward = RewardGenerator.Generate(UnityEngine.Random.Range(1, 10), DateTime.UtcNow);
 
-// GOOD: Deterministik fake'ler + sonuç/state doğrulaması
+// GOOD: Deterministic fakes plus result/state verification
 var clock = new FakeClock(new DateTime(2026, 05, 21, 12, 0, 0, DateTimeKind.Utc));
 var random = new FakeRandom(sequence: new[] { 3 });
 var result = useCase.Execute(clock, random);

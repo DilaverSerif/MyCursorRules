@@ -1,24 +1,24 @@
 ---
-description: Localization, kullanici metni ve sayi/tarih formatlama sinirlari
+description: Boundaries for localization, user-facing text, and number/date formatting
 globs: Assets/Game/Domain/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs
 alwaysApply: false
 ---
 
 # Localization And Text Formatting Boundary
 
-- `Domain` ve `Application` kullaniciya gosterilecek literal UI metni uretmemelidir.
-- Use case result/error code dondurur; lokalize metin Presentation veya Localization adapter tarafinda uretilir.
-- Para, sure, sayi, yuzde ve tarih formatlama UI/localization katmaninda yapilir; domain string formatlamaz.
-- Localization key'leri stabil ID olmalidir; hierarchy path, enum display name veya raw string uzerinden davranis baglama yapma.
-- Log mesaji, debug aciklamasi ve kullanici metni ayri contract'lardir; biri digerinin yerine kullanilmaz.
-- UI metni config'ten geliyorsa config authoring kaynagi olarak kalir; gameplay kuralini metin anahtarina baglama.
+- `Domain` and `Application` must not produce literal UI text for users.
+- Use cases return result/error codes; localized text is produced by Presentation or a Localization adapter.
+- Format currency, duration, numbers, percentages, and dates in the UI/localization layer; domain code should not format strings.
+- Localization keys should be stable IDs; do not bind behavior to hierarchy paths, enum display names, or raw strings.
+- Log messages, debug explanations, and user-facing text are separate contracts; do not use one as a substitute for another.
+- If UI text comes from config, keep that config as an authoring source; do not bind gameplay rules to text keys.
 
 ## Example
 
 ```csharp
-// BAD: Application kullanici metni formatliyor
+// BAD: Application formats user-facing text
 return Result.Failure($"You need {price - money} more coins.");
 
-// GOOD: Application code/context dondurur, UI lokalize eder
+// GOOD: Application returns code/context, UI localizes it
 return Result.Failure(StoreErrors.InsufficientCoins, new { MissingCoins = price - money });
 ```

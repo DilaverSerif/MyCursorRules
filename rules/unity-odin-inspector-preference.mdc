@@ -1,17 +1,17 @@
 ---
-description: Editor ve inspector gorunumlerinde Odin Inspector'u varsayilan tercih yap
+description: Prefer Odin Inspector for editor and inspector UI
 globs: Assets/Game/Editor/**/*.cs, Assets/Game/**/*Config*.cs, Assets/Game/**/*Authoring*.cs, Assets/Game/**/*Tool*.cs
 alwaysApply: false
 ---
 
 # Unity Odin Inspector Preference
 
-- Editor kodu yazarken veya inspector uzerinde deger/aksiyon gostereceksen aktif olarak Odin Inspector kullan; once attribute tabanli cozum dene.
-- Sadece inspector UX gerekiyorsa `Title`, `FoldoutGroup`, `BoxGroup`, `TabGroup`, `ShowIf`, `EnableIf`, `ValueDropdown`, `TableList` gibi Odin attribute'larini tercih et; gereksiz custom editor yazma.
-- Kalici olmayacak gorunum verisi icin `ShowInInspector` kullan; bunun serialization yapmadigini unutma.
-- Veri hem gorunecek hem kaydedilecekse once Unity serializer yeterli mi bak; yetmiyorsa `OdinSerialize`, `SerializedMonoBehaviour` veya `SerializedScriptableObject` kullan.
-- Editor penceresi veya tool gerekiyorsa `EditorWindow` yerine once `OdinEditorWindow` ile cozmeyi dene.
-- Odin kullanan editor kodunu `Editor` klasoru veya editor-only assembly icinde tut; runtime assembly'ye editor bagimliligi sizdirma.
+- When writing editor code or exposing values/actions in the inspector, actively use Odin Inspector; try an attribute-based solution first.
+- If only inspector UX is needed, prefer Odin attributes such as `Title`, `FoldoutGroup`, `BoxGroup`, `TabGroup`, `ShowIf`, `EnableIf`, `ValueDropdown`, and `TableList`; do not write unnecessary custom editors.
+- Use `ShowInInspector` for view-only data that should not be persisted; remember that it does not serialize data.
+- If data must both be shown and persisted, first check whether Unity serialization is enough; otherwise use `OdinSerialize`, `SerializedMonoBehaviour`, or `SerializedScriptableObject`.
+- If an editor window or tool is needed, try `OdinEditorWindow` before writing a plain `EditorWindow`.
+- Keep Odin editor code in an `Editor` folder or editor-only assembly; do not leak editor dependencies into runtime assemblies.
 
 ## Example
 

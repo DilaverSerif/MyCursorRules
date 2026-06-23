@@ -1,32 +1,32 @@
 ---
-description: Unity lifecycle ve execution order bagimliliklarini azaltma kurallari
+description: Rules for reducing Unity lifecycle and execution order dependencies
 globs: Assets/Game/Bootstrap/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Tests/Editor/*Scene*.cs
 alwaysApply: false
 ---
 
 # Unity Execution Order Safety
 
-- `Awake`, `OnEnable` veya `Start` siralarina gameplay davranisi baglama; initialization acik bir method, controller flow veya DI lifecycle uzerinden baslatilsin.
-- `Awake` yalnizca local reference cache, zorunlu `[SerializeField]` validation ve kendi component'ine ait dusuk riskli hazirlik icin kullanilsin.
-- Bir component baska component'in `Awake`/`Start` icinde hazir olacagini varsaymasin; hazirlik gerekiyorsa bunu acik `Initialize`, `Bind`, `RefreshInitialState` gibi cagriyla ifade et.
-- Execution order riski tasiyan orchestration kodunu `MonoBehaviour` icinde tutma; Unity lifecycle'a ihtiyaci yoksa plain controller/presenter'a tasi.
-- Event subscription injection ve scene wiring tamamlandiktan sonra yapilsin; ilk UI/state render event gelmesini beklemeden explicit refresh ile yapilsin.
-- `Start` icinde servis resolve, scene search, object graph kurma veya ilk state mutation yapma; bu sorumluluk `LifetimeScope`, presenter/controller veya use case akisi icinde kalsin.
-- Lifecycle callback imzalarinda (`Awake`/`Start`/`OnEnable`) `async` kullanma; async startup gereksinimini explicit `InitializeAsync` benzeri methodlara tasi.
-- Siralama problemini `await UniTask.Yield`, frame delay veya `Script Execution Order` ile yamalama; bunlar yalnizca gerekcesi acik ve izole Unity boundary durumlarinda son care olsun.
-- Async startup akislari `CancellationToken` kabul etmeli ve "ready" durumunu acik modellemeli; yarim initialize state event publish etmemeli.
+- Do not bind gameplay behavior to `Awake`, `OnEnable`, or `Start` ordering; start initialization through explicit methods, controller flow, or DI lifecycle.
+- Use `Awake` only for local reference caching, required `[SerializeField]` validation, and low-risk setup for the component itself.
+- A component must not assume another component is ready inside `Awake`/`Start`; if readiness matters, express it through `Initialize`, `Bind`, or `RefreshInitialState`.
+- Do not keep orchestration code with execution-order risk inside `MonoBehaviour`; move it to a plain controller/presenter when Unity lifecycle is not required.
+- Subscribe to events only after injection and scene wiring are complete; perform the first UI/state render with an explicit refresh instead of waiting for an event.
+- Do not resolve services, search the scene, build the object graph, or mutate first state in `Start`; keep that in `LifetimeScope`, presenter/controller flow, or use cases.
+- Do not make lifecycle callbacks (`Awake`/`Start`/`OnEnable`) async; move async startup into explicit methods such as `InitializeAsync`.
+- Do not patch ordering problems with `await UniTask.Yield`, frame delays, or `Script Execution Order`; these are last resorts for isolated Unity-boundary cases with a clear reason.
+- Async startup flows should accept `CancellationToken` and model readiness explicitly; do not publish events from half-initialized state.
 
 ## Example
 
 ```csharp
-// BAD: Baska component'in Start icinde hazirlandigini varsayiyor
+// BAD: Assumes another component is ready in Start
 private void Start()
 {
     _hud.Refresh(_gameState.CurrentOrder);
     _eventBus.Subscribe<OrderChanged>(OnOrderChanged);
 }
 
-// GOOD: Wiring tamamlandiktan sonra acik lifecycle ile baslatiliyor
+// GOOD: Starts through explicit lifecycle after wiring is complete
 public void Initialize()
 {
     _hud.Refresh(_gameState.CurrentOrder);

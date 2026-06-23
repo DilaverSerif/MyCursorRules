@@ -1,30 +1,30 @@
 ---
-description: Runtime Instantiate/Destroy, factory ve pooling yasam dongusu kurallari
+description: Runtime Instantiate/Destroy, factory, and pooling lifecycle rules
 globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Infrastructure/**/*.cs
 alwaysApply: false
 ---
 
 # Runtime Instantiation And Pooling
 
-- Sik olusturulan runtime objelerde `Instantiate`/`Destroy` spam'i yapma; pool veya factory kullan.
-- Factory/Application spawn karari verebilir; concrete prefab instantiate isi Unity boundary, Infrastructure veya Presentation adapter icinde kalir.
-- Pool'dan cikan objeler explicit `Initialize`/`Bind`, havuza donerken explicit `Reset`/`Dispose` akisina sahip olmalidir.
-- Pooled objeler eski event subscription, tween, coroutine, async task veya cancellation token tasimamali.
-- Pool optimizasyonu gameplay state sahipligini degistirmemeli; obje yasam dongusu ile domain entity yasam dongusu karistirilmamalidir.
-- Pool kullanilmayan tekil objelerde de instantiate yeri merkezi olmali; rastgele view/controller icinde prefab lifecycle dagitma.
-- Destroy yerine disable/pool kullaniliyorsa `OnDisable` yan etkilerinin gameplay state'i bozmadigini test et.
+- Do not spam `Instantiate`/`Destroy` for frequently created runtime objects; use a pool or factory.
+- Factory/Application may decide what to spawn; concrete prefab instantiation stays in a Unity boundary, Infrastructure, or Presentation adapter.
+- Objects taken from pools must have explicit `Initialize`/`Bind` flow, and explicit `Reset`/`Dispose` flow when returned.
+- Pooled objects must not keep stale event subscriptions, tweens, Coroutines, async tasks, or cancellation tokens.
+- Pooling optimization must not change gameplay state ownership; do not mix object lifecycle with domain entity lifecycle.
+- Even for one-off objects that are not pooled, keep instantiation centralized; do not scatter prefab lifecycle across random views/controllers.
+- If disable/pool replaces destroy, test that `OnDisable` side effects do not corrupt gameplay state.
 
 ## Example
 
 ```csharp
-// BAD: Her refresh'te child yok edip yeniden uretiyor
+// BAD: Deletes and recreates children on every refresh
 foreach (Transform child in _content)
 {
     Destroy(child.gameObject);
 }
 Instantiate(_rowPrefab, _content).GetComponent<OrderRowView>().Bind(order);
 
-// GOOD: Row pool reset/bind akisi ile kullaniliyor
+// GOOD: Row pool has reset/bind flow
 var row = _rowPool.Get();
 row.Bind(order);
 _activeRows.Add(row);

@@ -1,26 +1,26 @@
 ---
-description: Keep UI authoring in editor, runtime in presenters
+description: Keep UI authoring in editor and runtime behavior in presenters
 globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs, Assets/Game/Editor/**/*Menu*.cs, Assets/Game/Editor/**/*Ui*.cs
 alwaysApply: false
 ---
 
 # UI Authoring Runtime Boundary
 
-- `Presentation/UI` tarafinda runtime'da panel/row hiyerarsisi kurup kalici layout ureten kodlari minimumda tut; kalici yapi `UIScene` veya editor tool ile uretilir.
-- `UIManager` benzeri siniflar orchestration rolunde kalmali; buyuk sinif buyudukce akisi `View + Presenter + Controller` sinirlarina bol.
-- UI `*Controller : MonoBehaviour` siniflari buyuyorsa Unity-boundary kodunu `*View` icine, servis/use case orchestration kodunu plain C# `*Controller` veya `*Presenter` icine ayir.
-- Runtime kodu yalnizca `data bind`, `state refresh`, `visibility/tween` ve input emission yapmali; gameplay karari veya fiyat/ekonomi kurali koyma.
-- UI runtime config okuyorsa bunu gorunum metni, ikon, renk, siralama veya layout icin kullan; satin alma/odul/fiyat kararini use case veya application service versin.
-- Yeni UI ozelligi runtime davranis veya presenter logic'i ekliyorsa once presenter seviyesi test (success/failure) ekle; ardindan scene wiring degisikliklerini yap.
-- UI metin/renk/ikon anahtarlari sabit ID veya config ile yonetilsin; hiyerarsi index'i ve sibling sirasi ile davranis baglama.
+- Keep runtime code that builds persistent panel/row hierarchies under `Presentation/UI` to a minimum; persistent structure should be produced by `UIScene` or editor tools.
+- Classes such as `UIManager` should stay in an orchestration role; as they grow, split flow across `View + Presenter + Controller` boundaries.
+- If UI `*Controller : MonoBehaviour` classes grow, move Unity-boundary code into `*View` and service/use case orchestration into a plain C# `*Controller` or `*Presenter`.
+- Runtime code should only perform `data bind`, `state refresh`, `visibility/tween`, and input emission; do not add gameplay decisions or price/economy rules there.
+- If UI runtime reads config, use it for display text, icons, colors, ordering, or layout; purchase/reward/price decisions belong to a use case or application service.
+- When a new UI feature adds runtime behavior or presenter logic, add presenter-level tests first, then change scene wiring.
+- UI text/color/icon keys should be stable IDs or config; do not bind behavior to hierarchy indexes or sibling order.
 
 ## Example
 
 ```csharp
-// ❌ BAD: Runtime'da tum paneli sifirdan kurup is kurali da eklemek
+// BAD: Runtime builds the whole panel and adds a business rule
 if (playerLevel > 3) { CreateUpgradePanel(); _gameState.Money -= 100; }
 
-// ✅ GOOD: Runtime sadece gorunum datasini uygular
+// GOOD: Runtime only applies view data
 var layout = _upgradePresenter.BuildLayout(_gameState, _pricingConfig);
 _upgradeView.Apply(layout);
 ```

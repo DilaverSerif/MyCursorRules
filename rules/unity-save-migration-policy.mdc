@@ -1,28 +1,28 @@
 ---
-description: Save migration, fallback ve gorunur hata politikasi
+description: Save migration, fallback, and visible error policy
 globs: Assets/Game/Infrastructure/**/*.cs, Assets/Game/**/*Save*.cs, Assets/Game/**/*Persistence*.cs, Assets/Game/Tests/Editor/*Save*.cs, Assets/Game/Tests/Editor/*Migration*.cs
 alwaysApply: false
 ---
 
 # Save Migration Policy
 
-- Save root modelinde `version` ve UTC timestamp zorunlu; yeni alan eklemek migration ihtimalini acikca hesaba katsin.
-- Save schema degisince "eski veriyi nasil upgrade edecegim?" sorusu cevaplanmadan format degisikligini tamamlanmis sayma.
-- Migration adimlari deterministik ve tekrar calistirilabilir olsun; ayni save birden fazla kez acildiginda veri bozulmasi uretme.
-- Bozuk veya eksik save'de sessiz fallback yapma; baglamli `Debug.LogWarning`/`Debug.LogError` uret ve hangi version'dan geldigini logla.
-- Recoverable durumda guvenli default veya yeni save bootstrap akisini sec; recover edilemeyen durumda cagirana failure sonucu don.
-- Migration davranisi en az bir eski-version fixture veya DTO ornegi ile testlenmeli; sadece "happy path" save acilisi yeterli sayilmaz.
+- Save root models must include `version` and UTC timestamp; adding a new field should explicitly account for migration risk.
+- Do not consider a save schema change complete until the question "how do old saves upgrade?" has an answer.
+- Migration steps should be deterministic and repeatable; loading the same save multiple times must not corrupt data.
+- Do not silently fall back on corrupt or missing saves; log contextual `Debug.LogWarning`/`Debug.LogError` messages and include the source version.
+- In recoverable cases, choose a safe default or new-save bootstrap flow; in unrecoverable cases, return a failure result to the caller.
+- Migration behavior should have at least one old-version fixture or DTO example test; a happy-path save load is not enough.
 
 ## Example
 
 ```csharp
-// BAD: Version yok, parse hatasi sessizce yutuluyor
+// BAD: No version, parse error is swallowed silently
 catch
 {
     return new SaveData();
 }
 
-// GOOD: Version tabanli migration karari
+// GOOD: Migration decision is version-based
 if (save.Version < CurrentVersion)
 {
     save = _migrationService.Upgrade(save);

@@ -1,27 +1,27 @@
 ---
-description: ScriptableObject config tüketim ve runtime contract sınırları
+description: ScriptableObject config consumption and runtime contract boundaries
 globs: Assets/Game/**/*Config*.cs, Assets/Game/**/*Authoring*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Bootstrap/**/*.cs
 alwaysApply: false
 ---
 
 # Unity Config Consumption Boundary
 
-- `ScriptableObject` config authoring kaynağıdır; runtime mutable state veya domain modeli olarak kullanma.
-- Config asset'lerini girişte `Bootstrap`/`LifetimeScope` resolve eder ve DI'a açık dependency olarak verir.
-- Oyun kuralı, fiyat, ödül, spawn, quest veya progression kararı içeren config'i `Application` service/use case tüketmeli.
-- Görsel metin, ikon, renk, sıralama veya layout mapping config'i presenter/view adapter tarafında kullanılabilir.
-- `Domain` ve saf runtime model `ScriptableObject`, `UnityEngine.Object`, `GameObject`, `Transform` veya scene referansı tutmaz.
-- Presentation config'e ihtiyaç duyuyorsa dependency constructor/DI ile gelmeli; `Resources.Load` veya container fallback ile gizli config çekme yapma.
-- Config -> runtime dönüşümünde validation, duplicate ID kontrolü ve deterministik sıralama uygulanmalı.
-- Config nesnesi runtime'da mutate edilmemeli; mutable state ayrı runtime modelde tutulmalı.
+- `ScriptableObject` config is an authoring source; do not use it as runtime mutable state or as a domain model.
+- Resolve config assets at `Bootstrap`/`LifetimeScope` entry points and pass them into DI as explicit dependencies.
+- Config that controls rules, prices, rewards, spawns, quests, or progression decisions should be consumed by `Application` services/use cases.
+- Visual text, icon, color, ordering, or layout mapping config may be consumed by presenters/view adapters.
+- `Domain` and pure runtime models must not hold `ScriptableObject`, `UnityEngine.Object`, `GameObject`, `Transform`, or scene references.
+- If Presentation needs config, receive it through constructor/DI dependencies; do not pull hidden config with `Resources.Load` or container fallback.
+- Config-to-runtime conversion must validate data, detect duplicate IDs, and apply deterministic ordering.
+- Do not mutate config objects at runtime; keep mutable state in a separate runtime model.
 
 ## Example
 
 ```csharp
-// BAD: View config'ten gameplay kararını veriyor
+// BAD: View makes a gameplay decision from config
 if (_upgradeConfig.GetPrice(upgradeId) <= _gameState.Money) _gameState.Money -= price;
 
-// GOOD: Use case karar verir, view sonucu uygular
+// GOOD: Use case makes the decision; view applies the result
 var result = _buyUpgradeUseCase.Execute(upgradeId);
 _upgradeView.Apply(result);
 ```

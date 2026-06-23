@@ -1,27 +1,27 @@
 ---
-description: Runtime asset yukleme, Addressables ve Resources kullanim sinirlari
+description: Runtime asset loading, Addressables, and Resources usage boundaries
 globs: Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Infrastructure/**/*.cs, Assets/Game/Bootstrap/**/*.cs
 alwaysApply: false
 ---
 
 # Runtime Asset Loading Boundary
 
-- Runtime feature kodu dogrudan `Resources.Load`, path string veya hard-coded asset lookup kullanmamalidir.
-- Asset referanslari config, Addressables key contract, serialized reference veya DI ile acikca gelmelidir.
-- Asset load akisi `Infrastructure` veya Unity boundary adapter icinde servisle soyutlanmali; `Domain` ve saf `Application` asset database bilmemelidir.
-- Presentation kendisine verilen sprite, prefab, material, audio clip veya view model'i uygular; gameplay karari icin asset lookup yapmaz.
-- Async asset load cancellation token kabul etmeli ve owner lifecycle kapaninca iptal edilmelidir.
-- Missing asset durumunda baglamli hata loglanmali; sessiz placeholder fallback yalnizca bilincli UI fallback ise kullanilmalidir.
-- Addressables key/string kullaniliyorsa stabil ID contract'i olustur; hierarchy path veya dosya adi degisikligine gameplay davranisi baglama.
+- Runtime feature code must not call `Resources.Load`, use path strings, or perform hard-coded asset lookup directly.
+- Asset references should arrive explicitly through config, Addressables key contracts, serialized references, or DI.
+- Asset loading should be abstracted by a service inside `Infrastructure` or a Unity-boundary adapter; `Domain` and pure `Application` must not know the asset database.
+- Presentation applies the sprite, prefab, material, audio clip, or view model it receives; it does not look up assets to make gameplay decisions.
+- Async asset loading must accept a cancellation token and cancel when the owner lifecycle ends.
+- Missing assets should log contextual errors; silent placeholder fallback is allowed only for intentional UI fallback.
+- If Addressables keys/strings are used, create a stable ID contract; do not bind gameplay behavior to hierarchy paths or file names.
 
 ## Example
 
 ```csharp
-// BAD: Runtime kod path ile asset cekiyor
+// BAD: Runtime code loads assets by path
 var icon = Resources.Load<Sprite>($"Icons/{itemId}");
 _view.SetIcon(icon);
 
-// GOOD: Asset lookup boundary servisinden gelir
+// GOOD: Asset lookup comes from a boundary service
 var icon = await _itemIconProvider.LoadAsync(itemId, cancellationToken);
 _view.SetIcon(icon);
 ```

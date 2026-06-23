@@ -1,29 +1,29 @@
 ---
-description: UI runtime performans guardrail'leri
+description: UI runtime performance guardrails
 globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs
 alwaysApply: false
 ---
 
 # UI Runtime Performance Guardrails
 
-- `Update`/`LateUpdate` icinde tekrar eden `Find*`, `GetComponent*`, `new List`, `string` birlestirme veya pahali layout hesaplarini calistirma; referans ve hesap sonucunu cache'le.
-- UI refresh'i her frame degil, state degisince veya dirty-flag/event geldikce yap; "surekli redraw" varsayimini kabul etme.
-- `MonoBehaviour` icinde her frame panel build etme, child yaratma/silme veya `SetActive` spam'i uretme; layout authoring editor/scene tarafinda kalmali.
-- `Canvas.ForceUpdateCanvases`, `LayoutRebuilder`, `ContentSizeFitter` gibi pahali akislari gerekce olmadan zincirleme cagirma.
-- Siklikla guncellenen text/ikon alanlarinda eski degeri tutup yalnizca degisim varsa UI'yi yaz; alloc ve rebuild baskisini dusur.
-- Perf icin gizli state duplication yapma; optimizasyon state sahibi `GameState` veya presenter contract'i bozmayacak sekilde uygulanmali.
+- Do not run repeated `Find*`, `GetComponent*`, `new List`, string concatenation, or expensive layout calculations inside `Update`/`LateUpdate`; cache references and computed results.
+- Refresh UI on state changes, dirty flags, or events, not every frame; reject the assumption that redraw must be continuous.
+- Do not build panels every frame, create/delete children, or spam `SetActive` inside `MonoBehaviour`; layout authoring should stay in editor/scene setup.
+- Do not chain expensive flows such as `Canvas.ForceUpdateCanvases`, `LayoutRebuilder`, and `ContentSizeFitter` without a clear reason.
+- For frequently updated text/icon fields, keep the previous value and write to UI only when the value changes to reduce allocations and rebuilds.
+- Do not duplicate hidden state for performance; optimization must not break the owning `GameState` or presenter contract.
 
 ## Example
 
 ```csharp
-// BAD: Her frame yeni string ve refresh
+// BAD: New string and refresh every frame
 private void Update()
 {
     _moneyText.text = $"Coins: {_gameState.Money:F0}";
     _panel.Refresh(_gameState);
 }
 
-// GOOD: Sadece degisimde yaz
+// GOOD: Write only when the value changes
 if (!Mathf.Approximately(_lastMoney, _gameState.Money))
 {
     _lastMoney = _gameState.Money;

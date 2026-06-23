@@ -1,24 +1,24 @@
 ---
-description: Zaman ve rastgelelik kullanımında deterministik runtime ve test sınırları
+description: Deterministic runtime and test boundaries for time and randomness
 globs: Assets/Game/Domain/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Tests/**/*.cs
 alwaysApply: false
 ---
 
 # Time And Random Boundary
 
-- `Domain` ve `Application` içinde doğrudan `DateTime.Now`, `DateTime.UtcNow`, `UnityEngine.Time`, `UnityEngine.Random` veya global `System.Random` kullanma.
-- Zaman ihtiyacı `IClock`, rastgelelik ihtiyacı `IRandomProvider` gibi contract üzerinden gelmeli.
-- Save timestamp, cooldown, daily reward, spawn, drop, economy ve progression kararlarında injectable clock/random kullan.
-- Presentation yalnızca animasyon, tween, input gesture ve görsel zamanlama için Unity `Time` okuyabilir.
-- Random kararlarında seed/state sahipliği açık olmalı; replay, test veya migration davranışını gizli global random'a bağlama.
-- Testlerde sabit clock/random kullan; gerçek zaman, frame süresi, scene sırası veya Unity instance ID'ye bağlı assert yazma.
+- Do not use `DateTime.Now`, `DateTime.UtcNow`, `UnityEngine.Time`, `UnityEngine.Random`, or global `System.Random` directly inside `Domain` or `Application`.
+- Time should come through contracts such as `IClock`; randomness should come through contracts such as `IRandomProvider`.
+- Use injectable clock/random for save timestamps, cooldowns, daily rewards, spawns, drops, economy, and progression decisions.
+- Presentation may read Unity `Time` only for animation, tweening, input gestures, and visual timing.
+- Keep random seed/state ownership explicit; do not bind replay, test, or migration behavior to hidden global random.
+- In tests, use fixed clock/random; do not assert on real time, frame duration, scene order, or Unity instance IDs.
 
 ## Example
 
 ```csharp
-// BAD: Use case global zaman/random okuyor
+// BAD: Use case reads global time/random
 DateTime.UtcNow >= state.NextRewardAt && UnityEngine.Random.value > 0.5f;
 
-// GOOD: Deterministik contract üzerinden karar veriliyor
+// GOOD: Decision uses deterministic contracts
 _clock.UtcNow >= state.NextRewardAt && _random.Next01() > 0.5f;
 ```

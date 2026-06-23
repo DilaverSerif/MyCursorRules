@@ -1,25 +1,25 @@
 ---
-description: Logging, analytics, telemetry ve observability boundary kuralları
+description: Logging, analytics, telemetry, and observability boundary rules
 globs: Assets/Game/Application/**/*.cs, Assets/Game/Infrastructure/**/*.cs, Assets/Game/Presentation/**/*.cs
 alwaysApply: false
 ---
 
 # Unity Observability And Telemetry Boundary
 
-- `Domain` analytics, telemetry SDK, logger implementation veya Unity `Debug.Log` bilmemeli.
-- `Application` semantic outcome/event üretebilir; dış telemetry provider'a doğrudan gönderim yapmamalı.
-- Analytics/telemetry gönderimi `Infrastructure` veya `Presentation` adapter boundary içinde yapılmalı.
-- Log mesajı kullanıcıya gösterilen hata metni değildir; kullanıcı metni result/error code üzerinden localization tarafında üretilir.
-- Log/telemetry event'lerinde stabil ID, result code ve bağlam bulunmalı; PII veya secret değer loglanmamalı.
-- Hot loop içinde log spam üretme; repeated failure için throttle, aggregate veya state transition log'u kullan.
-- Expected gameplay failure info/warning seviyesinde yönetilmeli; bozuk invariant, IO/serialization veya programmer error error seviyesine çıkar.
+- `Domain` must not know analytics, telemetry SDKs, logger implementations, or Unity `Debug.Log`.
+- `Application` may produce semantic outcomes/events; it must not send directly to external telemetry providers.
+- Send analytics/telemetry from `Infrastructure` or `Presentation` adapter boundaries.
+- A log message is not user-facing error text; user text is produced from result/error codes through localization.
+- Log/telemetry events should include stable IDs, result codes, and context; do not log PII or secrets.
+- Do not spam logs inside hot loops; use throttling, aggregation, or state-transition logging for repeated failures.
+- Expected gameplay failures should be info/warning level; broken invariants, IO/serialization failures, or programmer errors may be error level.
 
 ## Example
 
 ```csharp
-// BAD: Use case telemetry SDK'ya doğrudan bağlı
+// BAD: Use case depends directly on telemetry SDK
 _analytics.Track("purchase", itemId);
 
-// GOOD: Use case outcome event üretir, adapter dış provider'a çevirir
+// GOOD: Use case emits an outcome event, adapter sends it to the provider
 _events.Publish(new ItemPurchased(itemId, price));
 ```

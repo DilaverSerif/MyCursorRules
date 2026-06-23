@@ -1,22 +1,22 @@
 ---
-description: Editor tooling için sahne, asset ve geri dönüş güvenlik kuralları
+description: Editor tooling safety rules for scenes, assets, and undo support
 globs: Assets/Game/Editor/**/*.cs, Assets/Game/Tests/Editor/**/*.cs
 alwaysApply: false
 ---
 
 # Unity Editor Tooling Safety
 
-- `Assets/Game/Editor` altındaki tool scriptleri editörle sınırlı kalmalı; runtime assembly'lere bağımlılık en aza indirilmeli.
-- Editor tool ile sahne/asset değiştirirken `Undo.RecordObject` veya uygun `Undo` çağrısını ekle; geri alma akışı korunmalı.
-- Tool çalışınca değişen objelerde `EditorUtility.SetDirty` ve gerekiyorsa `PrefabUtility` akışını tamamla.
-- Toplu düzenleme yapan tool'larda hedef filtrelemesini açık yaz; yanlış scene veya tüm projeye yayılacak değişiklikleri varsayılan yapma.
-- Hata durumunda sessiz geçme; hangi asset/sahne üzerinde patladığını belirten `Debug.LogError` üret.
-- Tool menüsü/komutları idempotent tasarlanmalı; aynı komut tekrarlandığında veri bozulması üretmemeli.
+- Keep tool scripts under `Assets/Game/Editor` editor-only; minimize dependencies on runtime assemblies.
+- When an editor tool changes scenes or assets, add `Undo.RecordObject` or the appropriate Undo call so rollback works.
+- After a tool changes objects, complete the `EditorUtility.SetDirty` flow and the required `PrefabUtility` flow when applicable.
+- Bulk-edit tools must state their target filters clearly; do not default to touching the wrong scene or the whole project.
+- Do not fail silently; log which asset/scene failed with `Debug.LogError`.
+- Tool menu commands should be idempotent; running the same command twice must not corrupt data.
 
 ## Example
 
 ```csharp
-// ✅ GOOD: Undo + dirty işaretleme
+// GOOD: Undo and dirty marking
 Undo.RecordObject(targetComponent, "Update UI Binding");
 targetComponent.RefreshBindings();
 EditorUtility.SetDirty(targetComponent);

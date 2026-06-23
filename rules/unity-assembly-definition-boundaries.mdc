@@ -1,25 +1,25 @@
 ---
-description: Assembly definition sınırları ve layer izolasyonu
+description: Assembly definition boundaries and layer isolation
 globs: Assets/Game/**/*.asmdef, Assets/Game/**/*.cs
 alwaysApply: false
 ---
 
 # Assembly Definition Boundaries
 
-- `Editor` kodu editor-only assembly içinde kalmalı; runtime assembly'lere `UnityEditor` veya editor tool dependency sızdırma.
-- `Domain` assembly/reference seti `UnityEngine`, `UnityEditor`, scene object ve infrastructure implementation almamalı.
-- `Application` runtime logic'i `Domain` ve ortak contract katmanlarına bağlanır; `Presentation` veya `Editor` referansı ekleme.
-- `Application` altındaki `ScriptableObject` config authoring tipleri UnityEngine'e bağlanabilir; bu istisna scene object, `MonoBehaviour`, IO veya presentation dependency taşımaz.
-- Test assembly'leri yalnızca test ettiği katman, gerekli test framework'ü ve açık runtime contract'larını referanslasın.
-- Yeni feature eklerken `asmdef` dependency yönü `Domain <- Application <- Presentation` dışına çıkıyorsa önce mimariyi düzelt.
-- `asmdef` yoksa yeni assembly eklemeden önce ayrımın gerçekten gerekli olup olmadığını sorgula.
+- Keep `Editor` code inside editor-only assemblies; do not leak `UnityEditor` or editor tooling dependencies into runtime assemblies.
+- `Domain` assemblies must not reference `UnityEngine`, `UnityEditor`, scene objects, or infrastructure implementations.
+- `Application` runtime logic may depend on `Domain` and shared contracts; do not add `Presentation` or `Editor` references.
+- `ScriptableObject` config authoring types under `Application` may reference UnityEngine, but this exception must not carry scene objects, `MonoBehaviour`, IO, or presentation dependencies.
+- Test assemblies should reference only the layer under test, required test frameworks, and explicit runtime contracts.
+- If a new feature pushes `asmdef` dependency direction outside `Domain <- Application <- Presentation`, fix the architecture before adding the reference.
+- If there is no `asmdef`, question whether a new assembly is actually needed before adding one.
 
 ## Example
 
 ```csharp
-// BAD: Domain assembly Unity dependency alıyor
+// BAD: Domain assembly takes a Unity dependency
 using UnityEngine;
 
-// GOOD: Domain saf kalır; Unity ihtiyacı adapter/editor assembly'de çözülür
+// GOOD: Domain stays pure; Unity needs are handled in adapter/editor assemblies
 public sealed class OrderRule { }
 ```

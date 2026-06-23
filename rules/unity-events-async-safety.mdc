@@ -1,24 +1,24 @@
 ---
-description: Event contract, async flow ve lifecycle güvenliği
+description: Event contract, async flow, and lifecycle safety
 globs: Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Infrastructure/**/*.cs, Assets/Game/Bootstrap/**/*.cs
 alwaysApply: false
 ---
 
 # Event And Async Safety
 
-- Event adları olmuş sonucu anlatmalı: `OrderCreated`, `QuestCompleted`, `InventoryChanged`; command niyeti taşıyan event yerine use case/service çağrısı yap.
-- Event payload'ı data-only kalmalı; service referansı, `UnityEngine.Object`, lazy scene erişimi veya davranış taşıma.
-- Entity temsil eden event payload'ında stabil ID bulunmalı; breaking alan silme/rename gerekiyorsa subscriber etkisini değerlendir ve gerekirse yeni event tipi aç.
-- Application akışı `validate -> mutate state -> publish event -> return` sırasını korumalı; event command/orchestration kanalı olarak kullanılmamalı.
-- Gameplay async akışlarında `UniTask` + `CancellationToken` kullan; `Task.Run`, fire-and-forget ve gizli global cancellation'dan kaçın.
-- `Awake`, `Start`, `OnEnable` gibi lifecycle callback imzaları sync kalsın; async iş token alan ayrı metoda delege edilsin.
-- Bir frame'den uzun süren akışlar owner kapanınca iptal edilmeli; kapanış sırası `subscription dispose -> token cancel -> resource dispose` olmalı.
-- `async void` yalnızca Unity callback sınırında zorunluysa kabul edilir; exception ve cancellation davranışı görünür kalmalı.
+- Event names should describe completed outcomes: `OrderCreated`, `QuestCompleted`, `InventoryChanged`; call a use case/service instead of publishing command-intent events.
+- Event payloads must stay data-only; do not carry service references, `UnityEngine.Object`, lazy scene access, or behavior.
+- Event payloads that represent an entity should include a stable ID; if a breaking field removal/rename is needed, assess subscribers and consider a new event type.
+- Application flow should preserve `validate -> mutate state -> publish event -> return`; do not use events as a command/orchestration channel.
+- Gameplay async flows should use `UniTask` plus `CancellationToken`; avoid `Task.Run`, fire-and-forget, and hidden global cancellation.
+- Lifecycle callbacks such as `Awake`, `Start`, and `OnEnable` should stay sync; delegate async work to a separate method that accepts a token.
+- Any flow longer than one frame should cancel when its owner shuts down; shutdown order should be `subscription dispose -> token cancel -> resource dispose`.
+- `async void` is acceptable only when forced at a Unity callback boundary; exception and cancellation behavior must remain visible.
 
 ## Example
 
 ```csharp
-// BAD: Async lifecycle + command event
+// BAD: Async lifecycle plus command event
 private async void Awake()
 {
     _eventBus.Publish(new BuyUpgradeRequested(upgradeId));

@@ -1,18 +1,18 @@
 ---
-description: Feature/module bazlı klasör yerleşimi ve dosya konumlandırma kuralları
+description: Feature/module folder layout and file placement rules
 globs: Assets/Game/**/*.cs, Assets/Game/**/*.asmdef, Assets/Game/**/*.asset, Assets/Game/**/*.prefab
 alwaysApply: false
 ---
 
 # Unity Feature Folder Layout
 
-- Yeni feature kodu mümkünse `Assets/Game/Features/<FeatureName>/` altında gruplanmalı.
-- Feature içindeki `Domain`, `Application`, `Presentation`, `Infrastructure` ve `Editor` ayrımı katman sorumluluğunu göstermeli.
-- `Domain` ve `Application` kodları Unity API referansı içermemeli; Unity-specific adapter/detail kodu `Presentation`, `Infrastructure` veya `Editor` altında kalmalı.
-- Testler production kodun yakınında veya açık test kökü altında aynı feature adıyla gruplanmalı.
-- `Utils`, `Helpers`, `Common`, `Managers` gibi belirsiz klasörler yeni davranış için varsayılan hedef olmamalı.
-- Prefab, scene, `ScriptableObject` ve UI asset'leri koddan ayrı ama feature/module ile ilişkili authoring alanında tutulmalı.
-- Shared kod yalnızca birden fazla feature tarafından gerçekten kullanılıyorsa ortak alana taşınmalı; tek feature ihtiyacını globalleştirme.
+- New feature code should be grouped under `Assets/Game/Features/<FeatureName>/` when possible.
+- The `Domain`, `Application`, `Presentation`, `Infrastructure`, and `Editor` split inside a feature should show layer responsibility.
+- `Domain` and `Application` code must not reference Unity APIs; Unity-specific adapter/detail code belongs under `Presentation`, `Infrastructure`, or `Editor`.
+- Tests should be grouped near production code or under an explicit test root with the same feature name.
+- Vague folders such as `Utils`, `Helpers`, `Common`, and `Managers` should not be the default home for new behavior.
+- Prefabs, scenes, `ScriptableObject`s, and UI assets should be separate from code but still tied to a feature/module authoring area.
+- Move code to a shared area only when multiple features truly use it; do not globalize a single feature's needs.
 
 ## Example
 

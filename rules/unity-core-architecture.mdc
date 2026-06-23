@@ -1,26 +1,26 @@
 ---
-description: Unity katman mimarisi ve bağımlılık yönü kuralları
+description: Unity layer architecture and dependency direction rules
 alwaysApply: true
 ---
 
 # Unity Core Architecture
 
-- Bağımlılık yönünü koru: `Domain <- Application <- Presentation`; `Bootstrap` tüm katmanları compose eder, `Infrastructure` sadece interface implement eder.
-- `Domain` içinde `UnityEngine`, sahne referansı, IO, DI container veya save/load kodu kullanma.
-- Oyun state mutasyonu yalnızca `UseCase` veya application service içinde yapılır.
-- `Presentation` gameplay kuralı yazmaz; yalnızca view güncelleme, input emission ve scene davranışı yönetir.
-- Yeni dosyaları doğru katmana koy; `Utils/Helpers/Misc` gibi belirsiz klasörler açma.
+- Preserve dependency direction: `Domain <- Application <- Presentation`; `Bootstrap` composes all layers, and `Infrastructure` only implements interfaces.
+- Do not use `UnityEngine`, scene references, IO, DI containers, or save/load code inside `Domain`.
+- Gameplay state mutation belongs in `UseCase` or application service code.
+- `Presentation` must not implement gameplay rules; it handles view updates, input emission, and scene behavior.
+- Put new files in the correct layer; do not create vague folders such as `Utils`, `Helpers`, or `Misc`.
 
 ## Example
 
 ```csharp
-// ❌ BAD: Presentation katmanında gameplay state mutasyonu
+// BAD: Presentation mutates gameplay state
 public void OnCookClicked()
 {
     _gameState.Money += 100;
 }
 
-// ✅ GOOD: Presenter sadece use case çağırır
+// GOOD: Presenter only calls the use case
 public Result OnCookClicked()
 {
     return _cookOrderUseCase.Execute();

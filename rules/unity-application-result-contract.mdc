@@ -1,24 +1,24 @@
 ---
-description: Application use case result, failure ve hata sözleşmesi standardı
+description: Application use case result, failure, and error contract standard
 globs: Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs
 alwaysApply: false
 ---
 
 # Application Result Contract
 
-- `UseCase` ve application service metotları beklenen gameplay sonucu için exception yerine `Result`, `Result<T>` veya açık domain failure modeli döndürmeli.
-- Validation failure, insufficient resource, missing entity, locked feature veya invalid command beklenen akıştır; exception değildir.
-- Exception yalnızca bozuk invariant, beklenmeyen IO/serialization, lifecycle iptali yapılmamış akış veya programmer error için kullanılır.
-- Presentation raw string hata üretmemeli; stabil error code/result alıp UI/localization mapping yapmalı.
-- Failure result stabil error code, ilgili entity/config ID ve loglamaya yarayan bağlam taşımalı.
-- State mutation yapan use case success/failure sonucunu deterministik bırakmalı; failure yarı-mutated state bırakmamalı.
+- `UseCase` and application service methods that produce expected gameplay outcomes should return `Result`, `Result<T>`, or an explicit domain failure model instead of throwing exceptions.
+- Validation failure, insufficient resource, missing entity, locked feature, and invalid command are expected flows, not exceptions.
+- Use exceptions only for broken invariants, unexpected IO/serialization failures, uncancelled lifecycle errors, or programmer errors.
+- Presentation must not create raw string errors; it should map stable error codes/results to UI/localization output.
+- Failure results should carry a stable error code, the relevant entity/config ID when possible, and logging context.
+- A use case that mutates state must leave deterministic success/failure state; failure must not leave half-mutated state.
 
 ## Example
 
 ```csharp
-// BAD: Beklenen failure exception ile taşınıyor
+// BAD: Expected failure is carried by an exception
 throw new InvalidOperationException("Not enough money");
 
-// GOOD: Beklenen failure result contract ile döner
+// GOOD: Expected failure returns through the result contract
 return Result.Failure(UpgradeErrors.InsufficientMoney, upgradeId);
 ```

@@ -1,27 +1,27 @@
 ---
-description: Katmanlara gore sinif, dosya ve rol isimlendirme standartlari
+description: Class, file, and role naming standards by layer
 alwaysApply: true
 ---
 
 # Layer Naming Conventions
 
-- Domain modelleri `*State`, `*Entity`, `*Rule`, `*Policy`, `*Value`, `*Snapshot` gibi sorumluluk belirten adlar tasimalidir.
-- Application davranislari `*UseCase`, `*Service`, `*Query`, `*Command`, `*CommandHandler` gibi acik rol adi ile bitmelidir.
-- Presentation Unity boundary siniflari `*View`, `*ViewAdapter`, `*Screen`, `*Panel`, `*Binder` gibi adlandirilmalidir.
-- Plain presentation orchestration siniflari `*Presenter` veya `*Controller` olmalidir; `Manager` adi yeni kodda kullanilmamalidir.
-- `System`, `Helper`, `Util`, `Manager`, `Handler` gibi belirsiz adlar gerekcesiz kullanilmamalidir; kullaniliyorsa sorumluluk daha spesifik hale getirilmelidir.
-- Dosya adi ust seviye type adi ile ayni olmalidir; tek dosyada tek ust seviye type kuralini bozma.
-- Klasor adi katman/feature amacini gostermelidir; `Misc`, `Common`, `Temp`, `New`, `Scripts` gibi belirsiz klasorler acma.
+- Domain models should use responsibility-bearing names such as `*State`, `*Entity`, `*Rule`, `*Policy`, `*Value`, or `*Snapshot`.
+- Application behavior should end with clear role names such as `*UseCase`, `*Service`, `*Query`, `*Command`, or `*CommandHandler`.
+- Presentation Unity-boundary classes should be named with roles such as `*View`, `*ViewAdapter`, `*Screen`, `*Panel`, or `*Binder`.
+- Plain presentation orchestration classes should be `*Presenter` or `*Controller`; do not use `Manager` for new code.
+- Avoid vague names such as `System`, `Helper`, `Util`, `Manager`, and `Handler` without a strong reason; make the responsibility more specific.
+- File names must match the top-level type name; keep one top-level type per file.
+- Folder names should express the layer/feature purpose; do not create vague folders such as `Misc`, `Common`, `Temp`, `New`, or `Scripts`.
 
 ## Example
 
 ```csharp
-// BAD: Rol belirsiz
+// BAD: Role is vague
 public sealed class UpgradeManager
 {
 }
 
-// GOOD: Rol ve katman net
+// GOOD: Role and layer are clear
 public sealed class BuyUpgradeUseCase
 {
 }
