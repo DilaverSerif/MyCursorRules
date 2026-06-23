@@ -6,9 +6,10 @@ alwaysApply: true
 # Unity Core Architecture
 
 - Preserve dependency direction: `Domain <- Application <- Presentation`; `Bootstrap` composes all layers, and `Infrastructure` only implements interfaces.
-- Do not use `UnityEngine`, scene references, IO, DI containers, or save/load code inside `Domain`.
+- Do not use `UnityEngine`, Photon Fusion SDK types, scene references, IO, DI containers, or save/load code inside `Domain`.
 - Gameplay state mutation belongs in `UseCase` or application service code.
 - `Presentation` must not implement gameplay rules; it handles view updates, input emission, and scene behavior.
+- Photon Fusion code belongs in `Presentation`, `Infrastructure`, or `Bootstrap` adapters; keep `NetworkRunner`, `NetworkObject`, `NetworkBehaviour`, `[Networked]`, RPCs, and `PlayerRef` out of domain models.
 - Put new files in the correct layer; do not create vague folders such as `Utils`, `Helpers`, or `Misc`.
 
 ## Example

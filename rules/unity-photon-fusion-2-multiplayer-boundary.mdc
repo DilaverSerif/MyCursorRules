@@ -1,0 +1,45 @@
+---
+description: Photon Fusion 2 Host/Server multiplayer authority, simulation, and replication boundaries
+globs: Assets/Game/**/*.cs, Assets/Game/**/*.asmdef, Assets/Game/**/*.prefab, Assets/Game/**/*.asset
+alwaysApply: false
+---
+
+# Photon Fusion 2 Multiplayer Boundary
+
+- Default to Photon Fusion 2 Host/Server topology; the host/server owns `StateAuthority` and authoritative gameplay state.
+- Treat `NetworkRunner`, `NetworkObject`, `NetworkBehaviour`, `[Networked]`, RPCs, `PlayerRef`, and Fusion input structs as networking boundary details, not domain concepts.
+- `Domain` must not reference Photon Fusion types; pure `Application` contracts should stay Fusion-free unless they belong to an explicit networking adapter boundary.
+- Use `NetworkBehaviour` only to bridge Fusion lifecycle (`Spawned`, `Despawned`, `FixedUpdateNetwork`, `Render`) with application/use case flow.
+- Authoritative gameplay simulation belongs in `FixedUpdateNetwork` on `StateAuthority`; `Render` and Unity `Update` are for visuals, interpolation, and local presentation.
+- Clients send gameplay intent through Fusion input collection; do not use RPCs as a general client command bus.
+- Use RPCs only for validated transient effects, notifications, or one-shot events; persistent replicated state belongs in `[Networked]` properties.
+- Validate `HasStateAuthority`, `HasInputAuthority`, RPC source, and target before accepting input, applying state, spawning, despawning, or triggering privileged effects.
+- Networked objects must be created and removed through `Runner.Spawn`, `Runner.Despawn`, scene network objects, or an `INetworkObjectProvider`; do not use raw `Instantiate`/`Destroy` for replicated entities.
+- Networked prefabs must have stable baked `NetworkObject`/`NetworkBehaviour` layout; do not add or remove `NetworkBehaviour` components after spawn.
+- Keep `[Networked]` data compact and explicit; replicate stable IDs and state needed for prediction/reconciliation, not scene references or presentation-only objects.
+- Map `PlayerRef` and network IDs to stable application/domain IDs at the boundary; do not let connection identity become gameplay identity without validation.
+
+## Example
+
+```csharp
+// BAD: Client RPC directly mutates authoritative state
+[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+private void RPC_BuyUpgrade()
+{
+    _wallet.Coins -= 100;
+}
+
+// GOOD: Fusion boundary validates authority and delegates the rule
+public override void FixedUpdateNetwork()
+{
+    if (!HasStateAuthority || !GetInput(out PlayerInputData input))
+    {
+        return;
+    }
+
+    if (input.BuyUpgradePressed)
+    {
+        _buyUpgradeUseCase.Execute(input.UpgradeId);
+    }
+}
+```

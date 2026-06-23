@@ -10,6 +10,7 @@ alwaysApply: false
 - Event payloads must stay data-only; do not carry service references, `UnityEngine.Object`, lazy scene access, or behavior.
 - Event payloads that represent an entity should include a stable ID; if a breaking field removal/rename is needed, assess subscribers and consider a new event type.
 - Application flow should preserve `validate -> mutate state -> publish event -> return`; do not use events as a command/orchestration channel.
+- Photon Fusion RPCs must validate source, target, and authority; use `[Networked]` state for persistent replication and keep RPCs for transient effects or validated one-shot notifications.
 - Gameplay async flows should use `UniTask` plus `CancellationToken`; avoid `Task.Run`, fire-and-forget, and hidden global cancellation.
 - Lifecycle callbacks such as `Awake`, `Start`, and `OnEnable` should stay sync; delegate async work to a separate method that accepts a token.
 - Any flow longer than one frame should cancel when its owner shuts down; shutdown order should be `subscription dispose -> token cancel -> resource dispose`.

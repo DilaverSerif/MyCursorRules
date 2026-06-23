@@ -10,6 +10,7 @@ alwaysApply: false
 - Time should come through contracts such as `IClock`; randomness should come through contracts such as `IRandomProvider`.
 - Use injectable clock/random for save timestamps, cooldowns, daily rewards, spawns, drops, economy, and progression decisions.
 - Presentation may read Unity `Time` only for animation, tweening, input gestures, and visual timing.
+- Photon Fusion simulation must not use `UnityEngine.Time` or `UnityEngine.Random` for authoritative decisions; tick/time/random state must be explicit and deterministic on the server-side flow.
 - Keep random seed/state ownership explicit; do not bind replay, test, or migration behavior to hidden global random.
 - In tests, use fixed clock/random; do not assert on real time, frame duration, scene order, or Unity instance IDs.
 

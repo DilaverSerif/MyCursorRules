@@ -7,8 +7,9 @@ alwaysApply: false
 # Assembly Definition Boundaries
 
 - Keep `Editor` code inside editor-only assemblies; do not leak `UnityEditor` or editor tooling dependencies into runtime assemblies.
-- `Domain` assemblies must not reference `UnityEngine`, `UnityEditor`, scene objects, or infrastructure implementations.
+- `Domain` assemblies must not reference `UnityEngine`, `UnityEditor`, Photon Fusion, scene objects, or infrastructure implementations.
 - `Application` runtime logic may depend on `Domain` and shared contracts; do not add `Presentation` or `Editor` references.
+- Photon Fusion assembly references must stay out of `Domain` and pure `Application`; place Fusion-dependent code in networking adapters under `Presentation`, `Infrastructure`, or `Bootstrap`.
 - `ScriptableObject` config authoring types under `Application` may reference UnityEngine, but this exception must not carry scene objects, `MonoBehaviour`, IO, or presentation dependencies.
 - Test assemblies should reference only the layer under test, required test frameworks, and explicit runtime contracts.
 - If a new feature pushes `asmdef` dependency direction outside `Domain <- Application <- Presentation`, fix the architecture before adding the reference.

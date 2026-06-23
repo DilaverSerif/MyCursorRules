@@ -7,6 +7,7 @@ alwaysApply: false
 # Unity MonoBehaviour Boundary
 
 - Use `MonoBehaviour` only for Unity boundaries: `[SerializeField]` scene references, `Transform`/`GameObject`, Unity callbacks, Coroutines, animation/tweening, or input adapters.
+- Treat Photon Fusion `NetworkBehaviour` as the same kind of boundary: it may handle Fusion lifecycle and authority checks, but it must not own gameplay rules.
 - `View : MonoBehaviour` manages scene references, UI state, animation, visibility/state application, and input intent emission.
 - `Controller` and `Presenter` should default to plain C#; a `MonoBehaviour` version needs a Unity lifecycle or scene-reference reason.
 - `Presenter` may listen to events, read state, and update views; it must not decide save/load, economy, purchase, or quest progress rules.

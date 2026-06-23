@@ -7,8 +7,10 @@ alwaysApply: false
 # Runtime Instantiation And Pooling
 
 - Do not spam `Instantiate`/`Destroy` for frequently created runtime objects; use a pool or factory.
+- For Photon Fusion replicated entities, use `Runner.Spawn`, `Runner.Despawn`, scene network objects, or an `INetworkObjectProvider`; do not use raw `Instantiate`/`Destroy`.
 - Factory/Application may decide what to spawn; concrete prefab instantiation stays in a Unity boundary, Infrastructure, or Presentation adapter.
 - Objects taken from pools must have explicit `Initialize`/`Bind` flow, and explicit `Reset`/`Dispose` flow when returned.
+- Network object pooling must clear Fusion-facing subscriptions, predicted visual state, cached authority assumptions, and any per-spawn application binding.
 - Pooled objects must not keep stale event subscriptions, tweens, Coroutines, async tasks, or cancellation tokens.
 - Pooling optimization must not change gameplay state ownership; do not mix object lifecycle with domain entity lifecycle.
 - Even for one-off objects that are not pooled, keep instantiation centralized; do not scatter prefab lifecycle across random views/controllers.

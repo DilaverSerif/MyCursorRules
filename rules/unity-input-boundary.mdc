@@ -7,6 +7,7 @@ alwaysApply: false
 # Input Boundary
 
 - Read Unity Input System, pointer, click, keyboard, touch, and gesture callbacks only inside Presentation adapters.
+- Collect Photon Fusion input inside Presentation/network adapters; Fusion input structs should carry gameplay intent and stable IDs, not scene references or service objects.
 - Do not mutate gameplay state inside input callbacks; forward input intent to a presenter/controller/use case through an explicit method or event.
 - Keep input action names, bindings, and device choices on the authoring/config side; `Application` must not know input devices or Unity callbacks.
 - Interpret UI gestures such as debounce, double-click, hold, and drag threshold in Presentation; gameplay validity stays in UseCase/Application.

@@ -9,6 +9,7 @@ alwaysApply: true
 - New `UseCase` or application service behavior should verify success path, expected failure path, and state mutation result; if it emits events, assert the event payload too.
 - Tests should verify behavior visible to the user/feature, not implementation details, private methods, or transient UI hierarchy details.
 - Real time, random, filesystem, network, Addressables, `Resources`, `GameObject`, `MonoBehaviour`, and frame counts must not enter Domain/Application tests; use fake, stub, or in-memory implementations.
+- Multiplayer rules should be tested as pure authority decisions and input-to-command mapping in EditMode; use PlayMode only for Photon Fusion runner, prefab, scene, or lifecycle wiring risk.
 - If a bug fix changes behavior, add a regression test; if doc-only, asset-only, rename, or mechanical refactor work does not add tests, explain why in the final note.
 - Test names should describe behavior: `Method_ExpectedResult_WhenCondition` or a readable sentence format is acceptable.
 - Async tests must make cancellation and failure paths visible; do not write fire-and-forget test code.

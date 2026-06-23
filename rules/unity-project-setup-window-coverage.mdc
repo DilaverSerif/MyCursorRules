@@ -7,6 +7,7 @@ alwaysApply: false
 # Unity Project Setup Window Coverage
 
 - When adding a new SDK, service, feature, or bootstrap flow, evaluate the files/settings required for it to work.
+- When adding Photon Fusion, setup coverage should check AppId/config, runner prefab or scene wiring, network prefab registration, and required Fusion settings.
 - If a required config asset, credential file, path, or manual setup step exists, add a requirement item to `ProjectSetupEditorWindow`.
 - A requirement should produce visible status through `Evaluate` and provide a short fixable description.
 - Provide fast access when possible through `Ping`, `RevealInFinder`, or focusing the relevant asset.
