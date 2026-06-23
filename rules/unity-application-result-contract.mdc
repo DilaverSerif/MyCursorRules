@@ -1,39 +1,24 @@
 ---
-description: Application use case sonuc, failure ve hata sozlesmesi standardi
-alwaysApply: true
+description: Application use case result, failure ve hata sözleşmesi standardı
+globs: Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs
+alwaysApply: false
 ---
 
 # Application Result Contract
 
-- `UseCase` ve application service metotlari gameplay sonucu uretiyorsa exception firlatmak yerine `Result`, `Result<T>` veya domain'e ait acik failure modeli dondurmelidir.
-- Validation failure, insufficient resource, missing entity, locked feature veya invalid command gibi beklenen akislar exception degildir.
-- Exception yalnizca bozuk invariant, beklenmeyen IO/serialization, iptal edilmemis lifecycle hatasi veya programlama hatasi icin kullanilir.
-- Presentation katmani raw string hata uretmemeli; stabil error code/result alip UI/localization mapping yapmalidir.
-- Failure result icinde stabil error code, mumkunse ilgili entity/config ID'si ve loglamaya yardimci olacak baglam bulunmalidir.
-- Use case sonucu state mutation yapmissa success/failure ayrimi deterministik olmali; failure durumunda yari-mutated state birakilmamalidir.
-- Log mesaji kullaniciya gosterilen hata metni degildir; result code ve log context ayri dusunulmelidir.
+- `UseCase` ve application service metotları beklenen gameplay sonucu için exception yerine `Result`, `Result<T>` veya açık domain failure modeli döndürmeli.
+- Validation failure, insufficient resource, missing entity, locked feature veya invalid command beklenen akıştır; exception değildir.
+- Exception yalnızca bozuk invariant, beklenmeyen IO/serialization, lifecycle iptali yapılmamış akış veya programmer error için kullanılır.
+- Presentation raw string hata üretmemeli; stabil error code/result alıp UI/localization mapping yapmalı.
+- Failure result stabil error code, ilgili entity/config ID ve loglamaya yarayan bağlam taşımalı.
+- State mutation yapan use case success/failure sonucunu deterministik bırakmalı; failure yarı-mutated state bırakmamalı.
 
 ## Example
 
 ```csharp
-// BAD: Beklenen gameplay failure exception ile tasiniyor
-public void BuyUpgrade(string upgradeId)
-{
-    if (_state.Money < price)
-    {
-        throw new InvalidOperationException("Not enough money");
-    }
-}
+// BAD: Beklenen failure exception ile taşınıyor
+throw new InvalidOperationException("Not enough money");
 
-// GOOD: Beklenen failure acik Result sozlesmesiyle doner
-public Result BuyUpgrade(string upgradeId)
-{
-    if (_state.Money < price)
-    {
-        return Result.Failure(UpgradeErrors.InsufficientMoney, upgradeId);
-    }
-
-    _state.Money -= price;
-    return Result.Success();
-}
+// GOOD: Beklenen failure result contract ile döner
+return Result.Failure(UpgradeErrors.InsufficientMoney, upgradeId);
 ```

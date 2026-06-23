@@ -1,69 +1,25 @@
 ---
-description: Unity Clean Architecture içinde logging, analytics, telemetry ve observability boundary kuralları
-alwaysApply: true
+description: Logging, analytics, telemetry ve observability boundary kuralları
+globs: Assets/Game/Application/**/*.cs, Assets/Game/Infrastructure/**/*.cs, Assets/Game/Presentation/**/*.cs
+alwaysApply: false
 ---
 
 # Unity Observability And Telemetry Boundary
 
-- Domain analytics, telemetry SDK, logger implementation veya Unity `Debug.Log` bilmemeli.
-- Application semantic outcome/event üretebilir; dış telemetry provider'a doğrudan gönderim yapmamalı.
-- Analytics/telemetry gönderimi Infrastructure veya Presentation adapter boundary içinde yapılmalı.
-- UI interaction event'i ile business event'i karıştırma; `ButtonClicked` başka, `ItemPurchased` başka olaydır.
-- Telemetry event adları stabil, versionlanabilir ve domain anlamı taşıyan isimler olmalı.
-- Telemetry payload explicit whitelist ile oluşturulmalı; tüm state'i serialize edip göndermek yasaktır.
-- PII, device identifier, user-generated text, save data veya ödeme bilgisi telemetry payload'a açık onay/whitelist olmadan eklenmemeli.
-- Telemetry failure gameplay akışını bozmamalı; tracking best-effort ve cancellation-safe olmalı.
-- Analytics side effect'i UseCase sonucunu değiştirmemeli.
-- Logger context içermeli; feature, use case, entity id, config id veya correlation id gibi debug değerleri eklenmeli.
-- Beklenen validation failure spam log üretmemeli; beklenmeyen invariant/IO/serialization hataları bağlamlı loglanmalı.
-- High-frequency eventlerde throttling, sampling veya aggregation düşünülmeli.
-- Debug/development logları release telemetry ile karıştırılmamalı.
-- Telemetry schema değişikliği event contract versioning yaklaşımıyla ele alınmalı.
+- `Domain` analytics, telemetry SDK, logger implementation veya Unity `Debug.Log` bilmemeli.
+- `Application` semantic outcome/event üretebilir; dış telemetry provider'a doğrudan gönderim yapmamalı.
+- Analytics/telemetry gönderimi `Infrastructure` veya `Presentation` adapter boundary içinde yapılmalı.
+- Log mesajı kullanıcıya gösterilen hata metni değildir; kullanıcı metni result/error code üzerinden localization tarafında üretilir.
+- Log/telemetry event'lerinde stabil ID, result code ve bağlam bulunmalı; PII veya secret değer loglanmamalı.
+- Hot loop içinde log spam üretme; repeated failure için throttle, aggregate veya state transition log'u kullan.
+- Expected gameplay failure info/warning seviyesinde yönetilmeli; bozuk invariant, IO/serialization veya programmer error error seviyesine çıkar.
 
 ## Example
 
 ```csharp
-// ❌ BAD: Application doğrudan SDK çağırıyor
-public sealed class PurchaseItemUseCase
-{
-    public PurchaseResult Execute(PurchaseCommand command)
-    {
-        AnalyticsSdk.Track("button_purchase_clicked", command);
-        // gameplay mutation...
-        return PurchaseResult.Success();
-    }
-}
+// BAD: Use case telemetry SDK'ya doğrudan bağlı
+_analytics.Track("purchase", itemId);
 
-// ✅ GOOD: Application semantic result/event üretir
-public sealed class PurchaseItemUseCase
-{
-    private readonly IDomainEventSink _events;
-
-    public PurchaseItemUseCase(IDomainEventSink events)
-    {
-        _events = events;
-    }
-
-    public PurchaseResult Execute(PurchaseCommand command)
-    {
-        // gameplay mutation...
-        _events.Publish(new ItemPurchasedEvent(command.ItemId, command.Price));
-        return PurchaseResult.Success();
-    }
-}
-
-// ✅ GOOD: Adapter telemetry provider'a çevirir
-public sealed class TelemetryEventAdapter : IDomainEventHandler<ItemPurchasedEvent>
-{
-    private readonly ITelemetryProvider _telemetry;
-
-    public void Handle(ItemPurchasedEvent e)
-    {
-        _telemetry.Track("item_purchased_v1", new Dictionary<string, object>
-        {
-            ["item_id"] = e.ItemId.Value,
-            ["price"] = e.Price.Amount
-        });
-    }
-}
+// GOOD: Use case outcome event üretir, adapter dış provider'a çevirir
+_events.Publish(new ItemPurchased(itemId, price));
 ```

@@ -1,31 +1,28 @@
 ---
-description: Scene referans guvenligi ve fail-fast dogrulama
-alwaysApply: true
+description: Scene referans güvenliği ve fail-fast doğrulama
+globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Bootstrap/**/*.cs, Assets/Game/Editor/**/*.cs
+alwaysApply: false
 ---
 
 # Scene Reference Safety
 
-- Kritik `[SerializeField]` referanslari `Awake`/`Start` basinda toplu dogrula; eksik wiring'i sessiz null-check zinciriyle gizleme.
-- Eksik scene referansinda baglamli `Debug.LogError` uret ve component akisini guvenli sekilde durdur; bozuk state ile devam etme.
-- Editor'de authoring hatalarini erken yakalamak icin uygun yerde `OnValidate` veya editor tooling dogrulamasi kullan.
-- Runtime'da eksik referansi otomatik `Find` ile yamamaya calisma; asil duzeltme scene/prefab wiring veya DI kaydinda yapilir.
-- Opsiyonel referans ile zorunlu referansi ayir; zorunlu alanlar isim, owner object ve beklenen rol bilgisini log mesajinda tasisin.
-- Toplu scene/tool degisikliklerinde `Undo`, `SetDirty` ve save akisi korunarak referans duzeltmesi idempotent yapilsin.
+- Kritik `[SerializeField]` referansları `Awake`/`Start` başında toplu doğrula; eksik wiring'i sessiz null-check zinciriyle gizleme.
+- Eksik zorunlu referansta bağlamlı `Debug.LogError` üret ve component akışını güvenli şekilde durdur.
+- Optional referans ile zorunlu referansı ayır; log mesajında owner object, field adı ve beklenen rol görünsün.
+- Runtime'da eksik referansı otomatik `Find` ile yamamaya çalışma; düzeltme scene/prefab wiring veya DI kaydında yapılır.
+- Editor'de authoring hatalarını erken yakalamak için uygun yerde `OnValidate` veya editor tooling doğrulaması kullan.
+- Toplu scene/tool değişikliklerinde `Undo`, `SetDirty` ve prefab save akışı korunmalı.
 
 ## Example
 
 ```csharp
-// BAD: Eksik referans sessizce geciliyor
-if (_moneyText != null)
-{
-    _moneyText.text = "0";
-}
+// BAD: Eksik referans sessiz geçiliyor
+if (_moneyText != null) _moneyText.text = "0";
 
-// GOOD: Zorunlu referans fail-fast dogrulaniyor
+// GOOD: Zorunlu referans fail-fast doğrulanıyor
 if (_moneyText == null)
 {
-    Debug.LogError("UIManager icinde _moneyText referansi eksik.");
+    Debug.LogError("UIManager._moneyText referansı eksik.");
     enabled = false;
-    return;
 }
 ```

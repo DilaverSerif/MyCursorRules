@@ -1,93 +1,25 @@
 ---
-description: Unity Clean Architecture için feature/module bazlı klasör yerleşimi ve dosya konumlandırma kuralları
-alwaysApply: true
+description: Feature/module bazlı klasör yerleşimi ve dosya konumlandırma kuralları
+globs: Assets/Game/**/*.cs, Assets/Game/**/*.asmdef, Assets/Game/**/*.asset, Assets/Game/**/*.prefab
+alwaysApply: false
 ---
 
 # Unity Feature Folder Layout
 
-- Yeni runtime kodu rastgele `Scripts/`, `Managers/`, `Helpers/`, `Misc/`, `Common/` veya scene/prefab yanına yerleştirme.
-- Feature'a ait kodlar feature/module kökü altında katmanlarına göre gruplanmalı.
-- Feature klasörü mümkün olduğunca tek bir bounded module gibi davranmalı; başka feature'ın internal implementation detaylarına doğrudan erişmemeli.
-- Shared kod yalnızca gerçekten birden fazla feature tarafından kullanılan, feature bağımsız ve stabil abstraction ise ortak alana taşınmalı.
-- Tek feature'ın kullandığı sınıfı `Shared`, `Common` veya `Core` altına erken taşıma.
-- Feature içindeki `Domain` ve `Application` kodları Unity API referansı içermemeli.
-- Feature içindeki `Presentation`, `Infrastructure` ve `Editor` klasörleri Unity-specific adapter/detail kodunu taşıyabilir.
+- Yeni feature kodu mümkünse `Assets/Game/Features/<FeatureName>/` altında gruplanmalı.
+- Feature içindeki `Domain`, `Application`, `Presentation`, `Infrastructure` ve `Editor` ayrımı katman sorumluluğunu göstermeli.
+- `Domain` ve `Application` kodları Unity API referansı içermemeli; Unity-specific adapter/detail kodu `Presentation`, `Infrastructure` veya `Editor` altında kalmalı.
 - Testler production kodun yakınında veya açık test kökü altında aynı feature adıyla gruplanmalı.
-- Editor-only kod `Editor/` altında kalmalı ve runtime assembly'ye sızmamalı.
-- Prefab, scene, ScriptableObject ve UI asset'leri koddan ayrı ama feature/module ile ilişkilendirilebilir bir authoring alanında tutulmalı.
-- Yeni class oluştururken önce sorumluluğunu belirle, sonra ait olduğu feature ve katmanı seç.
-- Belirsiz klasör adı kullanma; klasör adı feature, vertical slice veya açık teknik boundary ifade etmeli.
+- `Utils`, `Helpers`, `Common`, `Managers` gibi belirsiz klasörler yeni davranış için varsayılan hedef olmamalı.
+- Prefab, scene, `ScriptableObject` ve UI asset'leri koddan ayrı ama feature/module ile ilişkili authoring alanında tutulmalı.
+- Shared kod yalnızca birden fazla feature tarafından gerçekten kullanılıyorsa ortak alana taşınmalı; tek feature ihtiyacını globalleştirme.
 
-## Preferred Layout
-
-```text
-Assets/
-  Game/
-    Features/
-      Economy/
-        Domain/
-        Application/
-        Presentation/
-        Infrastructure/
-        Editor/
-        Tests/
-      Orders/
-        Domain/
-        Application/
-        Presentation/
-        Infrastructure/
-        Editor/
-        Tests/
-    Shared/
-      Domain/
-      Application/
-      Presentation/
-      Infrastructure/
-    Bootstrap/
-    ProjectSetup/
-```
-
-## Class Placement Examples
+## Example
 
 ```text
-// Domain
-Features/Economy/Domain/WalletState.cs
-Features/Economy/Domain/CurrencyAmount.cs
-Features/Economy/Domain/PurchasePolicy.cs
-
-// Application
-Features/Economy/Application/PurchaseItemUseCase.cs
-Features/Economy/Application/IWalletRepository.cs
-Features/Economy/Application/PurchaseResult.cs
-
-// Presentation
-Features/Economy/Presentation/WalletView.cs
-Features/Economy/Presentation/WalletPresenter.cs
-Features/Economy/Presentation/PurchaseButtonAdapter.cs
-
-// Infrastructure
-Features/Economy/Infrastructure/PlayerPrefsWalletRepository.cs
-Features/Economy/Infrastructure/EconomyConfigProvider.cs
-
-// Editor
-Features/Economy/Editor/EconomyConfigValidatorWindow.cs
-
-// Tests
-Features/Economy/Tests/EditMode/PurchaseItemUseCaseTests.cs
-Features/Economy/Tests/PlayMode/WalletViewBindingTests.cs
-```
-
-## Anti-Patterns
-
-```text
-// ❌ BAD
-Assets/Scripts/Managers/EconomyManager.cs
-Assets/Scripts/Helpers/PurchaseHelper.cs
-Assets/Scripts/Common/WalletStuff.cs
-Assets/Scripts/Misc/ButtonClick.cs
-
-// ✅ GOOD
-Assets/Game/Features/Economy/Application/PurchaseItemUseCase.cs
-Assets/Game/Features/Economy/Domain/WalletState.cs
-Assets/Game/Features/Economy/Presentation/PurchaseButtonAdapter.cs
+Assets/Game/Features/Economy/
+  Domain/
+  Application/
+  Presentation/
+  Tests/EditMode/
 ```

@@ -1,28 +1,31 @@
 ---
-description: VContainer composition root ve scene scope kayıt standartları
-alwaysApply: true
+description: VContainer composition root, bootstrap ve scene scope kayıt standartları
+globs: Assets/Game/Bootstrap/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Infrastructure/**/*.cs
+alwaysApply: false
 ---
 
 # Unity DI Composition And Scopes
 
-- DI akışını tek composition root üzerinden başlat; `Bootstrap` dışındaki katmanlarda container kurma.
+- DI akışı tek composition root üzerinden başlamalı; `Bootstrap` dışındaki katmanlarda container kurulmaz.
+- Uygulama seviyesi bootstrap, composition ve service initialization plain C# servislerde kalmalı; `MonoBehaviour` yalnızca scene boundary gerekiyorsa kullanılır.
 - `App` scope servislerini boot scope'ta, scene'e bağlı servisleri ilgili scene `LifetimeScope` içinde kaydet.
-- Plain C# servislerinde constructor injection tercih et; field/property injection ekleme.
-- Unity constructor kontrolu nedeniyle `MonoBehaviour` siniflarinda VContainer field veya method injection kullanilabilir.
-- Presentation controller/presenter siniflari Unity boundary tasimiyorsa plain C# olarak `Register` edilmeli; `MonoBehaviour` yalnizca view/scene adapter icin tercih edilmeli.
-- `MonoBehaviour` referansları için `RegisterComponent` veya `RegisterComponentInHierarchy` kullan; sahne bağımlılıklarını `new` ile üretme.
-- Scene bagimliliklarini `FindAnyObjectByType`, `container.Resolve`, singleton cekme veya service-locator fallback ile cozme; ilgili `LifetimeScope` kaydetsin, consumer inject alsin.
+- Plain C# servis, use case, presenter ve controller dependency'lerini constructor injection ile almalı.
+- `MonoBehaviour` referansları için `RegisterComponent` veya `RegisterComponentInHierarchy` kullan; scene dependency'lerini `new`, `Find*`, singleton veya service locator fallback ile toplama.
 - `RegisterInstance` yalnızca bilinçli singleton/config için kullan; geçici use case veya servisleri instance olarak kilitleme.
-- Service locator (`container.Resolve` çağrılarıyla yaygın çekme) kalıbını gameplay akışına taşıma; bağımlılığı kurucu ile geçir.
+- Initialization orchestration ile scene davranışı aynı class'ta birleşirse init kısmını plain C# servise, scene kısmını adapter `MonoBehaviour` katmanına ayır.
 
 ## Example
 
 ```csharp
-// ❌ BAD: Presentation içinde container kurma
-var builder = new ContainerBuilder();
-builder.Register<MyService>(Lifetime.Singleton);
+// BAD: Init orkestrasyonu MonoBehaviour ve scene lookup içinde
+private void Awake()
+{
+    var saveService = FindAnyObjectByType<SaveService>();
+    new AppBootstrapService(_config, saveService).Initialize();
+}
 
-// ✅ GOOD: Bootstrap/LifetimeScope içinde kayıt
-builder.Register<IMyService, MyService>(Lifetime.Scoped);
+// GOOD: Scope kayıtları dependency'leri açık verir
+builder.Register<AppBootstrapService>(Lifetime.Singleton);
+builder.Register<ISaveService, SaveService>(Lifetime.Singleton);
 builder.RegisterComponentInHierarchy<MyHudView>();
 ```

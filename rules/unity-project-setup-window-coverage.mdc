@@ -1,29 +1,23 @@
 ---
 description: Yeni sistemlerin setup gereksinimlerini Project Setup penceresine yansıt
-alwaysApply: true
+globs: Assets/Game/Editor/**/*Setup*.cs, Assets/Game/**/*Config*.cs, Assets/Game/Bootstrap/**/*.cs, Assets/Game/Infrastructure/**/*.cs
+alwaysApply: false
 ---
 
 # Unity Project Setup Window Coverage
 
-- Projeye yeni bir sistem eklendiğinde (SDK, servis, feature, bootstrap akışı), bu sistemin çalışması için gereken dosya/ayarlar değerlendirilmeli.
-- Eğer sistemin bir ayar dosyası, config asset’i, kimlik bilgisi dosyası veya zorunlu setup adımı varsa, `ProjectSetupEditorWindow` içinde yeni bir requirement kalemi eklenmeli.
-- Requirement kalemi en az şu davranışları sağlamalı:
-  - Durum kontrolü (`Evaluate`) ile yeşil/kırmızı görünürlük
-  - Genişleyen panelde kısa açıklama + gerekli alanları doldurma
-  - Mümkünse `Ping` / `RevealInFinder` ile hızlı erişim
-- Yeni sistem eklendiğinde, setup penceresi güncellenmeden iş “tamamlandı” sayılmaz.
-- Dosya tabanlı requirement’larda sabit beklenen path açıkça belirtilmeli.
+- Yeni SDK, servis, feature veya bootstrap akışı eklenince çalışması için gereken dosya/ayarlar değerlendirilmeli.
+- Zorunlu config asset, credential file, path veya manuel setup adımı varsa `ProjectSetupEditorWindow` içinde requirement kalemi ekle.
+- Requirement `Evaluate` ile görünür durum üretmeli ve kullanıcıya düzeltilebilir kısa açıklama sunmalı.
+- Mümkünse `Ping`, `RevealInFinder` veya ilgili asset'e odaklama gibi hızlı erişim sağla.
+- Dosya tabanlı requirement'larda beklenen path sabit ve açık olmalı.
+- Aynı setup komutu tekrar çalıştığında veri bozmamalı; idempotent davranmalı.
 
 ## Example
 
 ```csharp
-// ❌ BAD: Yeni ödeme sistemi eklendi ama setup penceresinde görünmüyor
-// PaymentConfig.asset zorunlu olmasına rağmen Project Setup kontrolü yok.
+// BAD: PaymentConfig zorunlu ama setup kontrolü yok
 
-// ✅ GOOD: Yeni requirement eklenir ve setup görünür hale gelir
-_requirements = new IProjectSetupRequirement[]
-{
-    new PaymentConfigSetupRequirement(),
-    // ... mevcut kalemler
-};
+// GOOD: Requirement görünür ve doğrulanabilir
+_requirements.Add(new PaymentConfigSetupRequirement());
 ```

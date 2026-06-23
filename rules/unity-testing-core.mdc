@@ -1,0 +1,30 @@
+---
+description: Unity Domain/Application test kapsamı ve deterministik test standartları
+alwaysApply: true
+---
+
+# Unity Testing Core
+
+- `Domain` ve `Application` davranışları için varsayılan test türü `EditMode` olmalı; `PlayMode` yalnızca scene, prefab, input adapter, UI rendering veya Unity lifecycle riski varsa kullanılmalı.
+- Yeni `UseCase` veya application service davranışı success path, beklenen failure path ve state mutation sonucunu doğrulamalı; event üretiyorsa event payload'ı da assert edilmeli.
+- Testler implementation detail, private method veya geçici UI hierarchy detayını değil kullanıcıya/feature'a görünen davranışı ölçmeli.
+- Gerçek zaman, random, dosya sistemi, network, Addressables, `Resources`, `GameObject`, `MonoBehaviour` veya frame count Domain/Application testlerine girmemeli; fake, stub veya in-memory implementation kullan.
+- Bug fix davranış değiştiriyorsa regression test ekle; doc-only, asset-only, rename veya mekanik refactor işlerinde test eklenmiyorsa final notunda gerekçe belirt.
+- Test isimleri davranışı anlatmalı: `Method_ExpectedResult_WhenCondition` veya okunabilir cümle formatı kabul edilir.
+- Async testlerde cancellation ve failure path görünür olmalı; fire-and-forget test kodu yazma.
+- Test-only public API açma; gerekiyorsa `InternalsVisibleTo` kontrollü ve gerekçeli kullanılmalı.
+
+## Example
+
+```csharp
+// BAD: Global zaman/random ve sadece dönüş değeri varsayımı
+var reward = RewardGenerator.Generate(UnityEngine.Random.Range(1, 10), DateTime.UtcNow);
+
+// GOOD: Deterministik fake'ler + sonuç/state doğrulaması
+var clock = new FakeClock(new DateTime(2026, 05, 21, 12, 0, 0, DateTimeKind.Utc));
+var random = new FakeRandom(sequence: new[] { 3 });
+var result = useCase.Execute(clock, random);
+
+Assert.That(result.IsSuccess, Is.True);
+Assert.That(gameState.Coins, Is.EqualTo(30));
+```

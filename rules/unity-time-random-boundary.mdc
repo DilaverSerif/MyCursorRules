@@ -1,29 +1,24 @@
 ---
-description: Zaman ve rastgelelik kullaniminda deterministik runtime ve test sinirlari
-alwaysApply: true
+description: Zaman ve rastgelelik kullanımında deterministik runtime ve test sınırları
+globs: Assets/Game/Domain/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Tests/**/*.cs
+alwaysApply: false
 ---
 
 # Time And Random Boundary
 
-- `Domain` ve `Application` icinde dogrudan `DateTime.Now`, `DateTime.UtcNow`, `UnityEngine.Time`, `UnityEngine.Random` veya `System.Random` singleton kullanma.
-- Zaman ihtiyaci `IClock`, rastgelelik ihtiyaci `IRandomProvider` gibi contract uzerinden gelmelidir.
-- Save timestamp, cooldown, daily reward, spawn, drop, ekonomi ve progression kararlarinda injectable clock/random kullan.
-- Presentation yalnizca animasyon, tween, input gesture ve gorsel zamanlama icin Unity `Time` okuyabilir.
-- Random kararlarinda seed/state sahipligini acik tut; replay, test veya migration davranisini gizli global random'a baglama.
-- Testlerde sabit clock/random kullan; gercek zaman, frame suresi, scene sirasi veya Unity instance ID'ye bagli assert yazma.
+- `Domain` ve `Application` içinde doğrudan `DateTime.Now`, `DateTime.UtcNow`, `UnityEngine.Time`, `UnityEngine.Random` veya global `System.Random` kullanma.
+- Zaman ihtiyacı `IClock`, rastgelelik ihtiyacı `IRandomProvider` gibi contract üzerinden gelmeli.
+- Save timestamp, cooldown, daily reward, spawn, drop, economy ve progression kararlarında injectable clock/random kullan.
+- Presentation yalnızca animasyon, tween, input gesture ve görsel zamanlama için Unity `Time` okuyabilir.
+- Random kararlarında seed/state sahipliği açık olmalı; replay, test veya migration davranışını gizli global random'a bağlama.
+- Testlerde sabit clock/random kullan; gerçek zaman, frame süresi, scene sırası veya Unity instance ID'ye bağlı assert yazma.
 
 ## Example
 
 ```csharp
-// BAD: Use case global zaman ve random okuyor
-if (DateTime.UtcNow >= _state.NextRewardAt && UnityEngine.Random.value > 0.5f)
-{
-    _state.Coins += 100;
-}
+// BAD: Use case global zaman/random okuyor
+DateTime.UtcNow >= state.NextRewardAt && UnityEngine.Random.value > 0.5f;
 
-// GOOD: Deterministik contract uzerinden karar veriliyor
-if (_clock.UtcNow >= _state.NextRewardAt && _random.Next01() > 0.5f)
-{
-    _state.Coins += 100;
-}
+// GOOD: Deterministik contract üzerinden karar veriliyor
+_clock.UtcNow >= state.NextRewardAt && _random.Next01() > 0.5f;
 ```
