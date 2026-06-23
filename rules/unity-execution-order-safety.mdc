@@ -1,0 +1,35 @@
+---
+description: Unity lifecycle ve execution order bagimliliklarini azaltma kurallari
+globs: Assets/Game/Bootstrap/**/*.cs, Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Tests/Editor/*Scene*.cs
+alwaysApply: false
+---
+
+# Unity Execution Order Safety
+
+- `Awake`, `OnEnable` veya `Start` siralarina gameplay davranisi baglama; initialization acik bir method, controller flow veya DI lifecycle uzerinden baslatilsin.
+- `Awake` yalnizca local reference cache, zorunlu `[SerializeField]` validation ve kendi component'ine ait dusuk riskli hazirlik icin kullanilsin.
+- Bir component baska component'in `Awake`/`Start` icinde hazir olacagini varsaymasin; hazirlik gerekiyorsa bunu acik `Initialize`, `Bind`, `RefreshInitialState` gibi cagriyla ifade et.
+- Execution order riski tasiyan orchestration kodunu `MonoBehaviour` icinde tutma; Unity lifecycle'a ihtiyaci yoksa plain controller/presenter'a tasi.
+- Event subscription injection ve scene wiring tamamlandiktan sonra yapilsin; ilk UI/state render event gelmesini beklemeden explicit refresh ile yapilsin.
+- `Start` icinde servis resolve, scene search, object graph kurma veya ilk state mutation yapma; bu sorumluluk `LifetimeScope`, presenter/controller veya use case akisi icinde kalsin.
+- Lifecycle callback imzalarinda (`Awake`/`Start`/`OnEnable`) `async` kullanma; async startup gereksinimini explicit `InitializeAsync` benzeri methodlara tasi.
+- Siralama problemini `await UniTask.Yield`, frame delay veya `Script Execution Order` ile yamalama; bunlar yalnizca gerekcesi acik ve izole Unity boundary durumlarinda son care olsun.
+- Async startup akislari `CancellationToken` kabul etmeli ve "ready" durumunu acik modellemeli; yarim initialize state event publish etmemeli.
+
+## Example
+
+```csharp
+// BAD: Baska component'in Start icinde hazirlandigini varsayiyor
+private void Start()
+{
+    _hud.Refresh(_gameState.CurrentOrder);
+    _eventBus.Subscribe<OrderChanged>(OnOrderChanged);
+}
+
+// GOOD: Wiring tamamlandiktan sonra acik lifecycle ile baslatiliyor
+public void Initialize()
+{
+    _hud.Refresh(_gameState.CurrentOrder);
+    _subscription = _eventBus.Subscribe<OrderChanged>(OnOrderChanged);
+}
+```

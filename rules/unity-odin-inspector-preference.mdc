@@ -1,0 +1,29 @@
+---
+description: Editor ve inspector gorunumlerinde Odin Inspector'u varsayilan tercih yap
+globs: Assets/Game/Editor/**/*.cs, Assets/Game/**/*Config*.cs, Assets/Game/**/*Authoring*.cs, Assets/Game/**/*Tool*.cs
+alwaysApply: false
+---
+
+# Unity Odin Inspector Preference
+
+- Editor kodu yazarken veya inspector uzerinde deger/aksiyon gostereceksen aktif olarak Odin Inspector kullan; once attribute tabanli cozum dene.
+- Sadece inspector UX gerekiyorsa `Title`, `FoldoutGroup`, `BoxGroup`, `TabGroup`, `ShowIf`, `EnableIf`, `ValueDropdown`, `TableList` gibi Odin attribute'larini tercih et; gereksiz custom editor yazma.
+- Kalici olmayacak gorunum verisi icin `ShowInInspector` kullan; bunun serialization yapmadigini unutma.
+- Veri hem gorunecek hem kaydedilecekse once Unity serializer yeterli mi bak; yetmiyorsa `OdinSerialize`, `SerializedMonoBehaviour` veya `SerializedScriptableObject` kullan.
+- Editor penceresi veya tool gerekiyorsa `EditorWindow` yerine once `OdinEditorWindow` ile cozmeyi dene.
+- Odin kullanan editor kodunu `Editor` klasoru veya editor-only assembly icinde tut; runtime assembly'ye editor bagimliligi sizdirma.
+
+## Example
+
+```csharp
+public sealed class ExampleAuthoring : SerializedMonoBehaviour
+{
+    [Title("Runtime Debug")]
+    [ShowInInspector, ReadOnly]
+    private int ActiveOrderCount => _orderService?.ActiveOrderCount ?? 0;
+
+    [BoxGroup("Config")]
+    [Required]
+    [SerializeField] private PricingConfig _pricingConfig;
+}
+```

@@ -1,0 +1,28 @@
+---
+description: Coroutine kullanimi ile UniTask/application flow ayrimi
+globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Infrastructure/**/*.cs
+alwaysApply: false
+---
+
+# Coroutine Boundary
+
+- Coroutine yalnizca Unity-boundary gorsel akis, tween bekleme, animation timing veya engine callback gerektiren durumlarda kullanilmalidir.
+- Gameplay orchestration, save/load, network, economy veya application flow coroutine ile yazilmamali; `UniTask` + cancellation token kullanilmalidir.
+- Coroutine baslatan `MonoBehaviour`, kapanista coroutine'i durdurmali ve yari state birakmamalidir.
+- Coroutine icinde domain/application state mutation gerekiyorsa bu mutation dogrudan state uzerinde degil, use case cagrisi uzerinden yapilmalidir.
+- Coroutine sonucuna bagli UI refresh varsa owner view/presenter lifecycle'i dogrulanmali; disable edilmis view'e yazma yapilmaz.
+- Coroutine ile async task ayni flow'da karistiriliyorsa cancellation ve exception handling tek yerden gorunur olmalidir.
+
+## Example
+
+```csharp
+// BAD: Save akisi coroutine icinde gizli ve iptalsiz
+private IEnumerator SaveRoutine()
+{
+    yield return null;
+    _saveService.Save(_state);
+}
+
+// GOOD: Application flow cancellable async contract ile calisir
+await _saveUseCase.ExecuteAsync(cancellationToken);
+```

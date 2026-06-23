@@ -1,0 +1,26 @@
+---
+description: Servis ve use case'ler icin test kapsama matrisi
+alwaysApply: true
+---
+
+# Test Coverage Matrix
+
+- `Application` ve `Domain` icin once `EditMode` test yaz; `PlayMode` sadece scene/`MonoBehaviour` entegrasyonu zorunluysa kullan.
+- Runtime davranisi olan yeni `UseCase` veya application service icin minimum paket: `success-path`, `failure-path`, `state mutation assert` ve varsa `event publish assert`.
+- Test yalnizca donus degerini degil, state sahibi `GameState` veya ilgili runtime model uzerindeki yan etkiyi de dogrulasin.
+- Event ureten akislarda "event geldi mi?" assert'i zorunlu; yalnizca method cagrildi varsayimi yeterli degil.
+- Davranis degistiren bug fix kapatisinda ilgili regression test olmadan isi tamamlanmis sayma; test bug'in eski davranisini yakalamali.
+- Doc-only, asset-only, rename veya mekanik refactor gibi davranis degistirmeyen islerde test eklenmiyorsa gerekceyi final notunda belirt.
+- Test isimlerini davranis odakli yaz: `Method_ExpectedResult_WhenCondition`.
+- Deterministik setup kullan: sabit ID, sabit zaman/veri ve gerekiyorsa fake clock; frame sayisi, scene sirasi veya Unity instance ID'ye yaslanma.
+
+## Example
+
+```csharp
+// GOOD: Sonuc + state + event birlikte dogrulaniyor
+var result = useCase.Execute();
+
+Assert.That(result.IsSuccess, Is.True);
+Assert.That(gameState.Money, Is.EqualTo(100));
+Assert.That(publishedEvents, Has.Some.Matches<MoneyChanged>(x => x.Amount == 100));
+```

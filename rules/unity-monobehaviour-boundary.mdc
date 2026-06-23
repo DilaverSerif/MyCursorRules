@@ -1,0 +1,53 @@
+---
+description: MonoBehaviour sinirini view/scene adapter ile kisitlama kurallari
+globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Bootstrap/**/*.cs
+alwaysApply: false
+---
+
+# Unity MonoBehaviour Boundary
+
+- `MonoBehaviour` yalnizca Unity boundary icin kullanilsin: `[SerializeField]` scene referansi, `Transform`/`GameObject`, Unity event callback, coroutine, animation/tween veya input adapter.
+- `View` scene referanslarini, UI state'ini, animasyonu ve input event tetiklemeyi yonetir.
+- `Controller` ve `Presenter` siniflari varsayilan olarak plain C# olmali; `MonoBehaviour` gerekiyorsa sebep Unity lifecycle veya scene referansi olmalidir.
+- `Presenter` event dinler, state okur ve view update eder; save/load yapmaz.
+- `Controller` uzun omurlu scene flow, route ve donguleri yonetir; Unity boundary yoksa `MonoBehaviour` olmamalidir.
+- `View : MonoBehaviour` scene referanslarini, animasyonu, visibility/state apply ve input intent emission islerini yapar; servis cagirma, satin alma, ekonomi karari veya quest progress gibi application orchestration yapmaz.
+- Plain controller/presenter dependency'lerini constructor ile alir ve view'e `Bind`, `Initialize`, `RefreshInitialState`, `Dispose` gibi acik lifecycle methodlariyla baglanir.
+- `MonoBehaviour` icinde `FindAnyObjectByType`, `container.Resolve` veya service locator fallback ile servis cekme; gerekli servisleri `LifetimeScope` kaydeder ve VContainer inject eder.
+- Subscribe olunan her event icin yasam dongusunde `Dispose` veya esdeger unsubscribe uygula.
+- Runtime'da panel/row yaratma gerekiyorsa bu kod view/adapter sinirinda kalmali; karar ve data hazirlama plain presenter/controller tarafinda yapilmalidir.
+- Buyuyen bir `*Controller : MonoBehaviour` dosyasinda once Unity-boundary kodunu `*View` icine, application akisini plain `*Controller` veya `*Presenter` icine ayir.
+
+## Example
+
+```csharp
+// BAD: MonoBehaviour hem view hem application orchestration yapiyor
+public sealed class ShopController : MonoBehaviour
+{
+    private void OnBuyClicked()
+    {
+        var result = _shopService.TryBuy();
+        _eventBus.Publish(new NotificationRequested(result.Message));
+        _statusText.text = result.Message;
+    }
+}
+
+// GOOD: View intent bildirir, plain controller application akisina karar verir
+public sealed class ShopView : MonoBehaviour
+{
+    public event Action BuyRequested;
+
+    private void OnBuyClicked()
+    {
+        BuyRequested?.Invoke();
+    }
+}
+
+public sealed class ShopController
+{
+    public ShopController(ShopView view, ShopService shopService, IEventBus eventBus)
+    {
+        // constructor injection + explicit bind
+    }
+}
+```

@@ -1,0 +1,23 @@
+---
+description: Editor tooling için sahne, asset ve geri dönüş güvenlik kuralları
+globs: Assets/Game/Editor/**/*.cs, Assets/Game/Tests/Editor/**/*.cs
+alwaysApply: false
+---
+
+# Unity Editor Tooling Safety
+
+- `Assets/Game/Editor` altındaki tool scriptleri editörle sınırlı kalmalı; runtime assembly'lere bağımlılık en aza indirilmeli.
+- Editor tool ile sahne/asset değiştirirken `Undo.RecordObject` veya uygun `Undo` çağrısını ekle; geri alma akışı korunmalı.
+- Tool çalışınca değişen objelerde `EditorUtility.SetDirty` ve gerekiyorsa `PrefabUtility` akışını tamamla.
+- Toplu düzenleme yapan tool'larda hedef filtrelemesini açık yaz; yanlış scene veya tüm projeye yayılacak değişiklikleri varsayılan yapma.
+- Hata durumunda sessiz geçme; hangi asset/sahne üzerinde patladığını belirten `Debug.LogError` üret.
+- Tool menüsü/komutları idempotent tasarlanmalı; aynı komut tekrarlandığında veri bozulması üretmemeli.
+
+## Example
+
+```csharp
+// ✅ GOOD: Undo + dirty işaretleme
+Undo.RecordObject(targetComponent, "Update UI Binding");
+targetComponent.RefreshBindings();
+EditorUtility.SetDirty(targetComponent);
+```

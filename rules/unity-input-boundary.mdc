@@ -1,0 +1,30 @@
+---
+description: Unity input callbackleri ile application/use case arasindaki sinirlar
+globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs
+alwaysApply: false
+---
+
+# Input Boundary
+
+- Unity Input System, pointer, click, keyboard, touch ve gesture callback'leri yalnizca Presentation adapter icinde okunmalidir.
+- Input callback icinde gameplay state mutate etme; input intent'i presenter/controller/use case'e acik method veya event olarak ilet.
+- Input action isimleri, binding ve device kararlarinin authoring/config tarafinda kalmasini sagla; `Application` input device veya Unity callback bilmez.
+- Debounce, double-click, hold, drag threshold gibi UI gesture yorumlari Presentation'da; gameplay gecerlilik karari UseCase/Application'da kalir.
+- Input subscription lifecycle'i acik olmalidir; `OnEnable`/`OnDisable` veya owner cancellation ile unsubscribe garanti edilir.
+- Input'tan gelen ID, index veya pointer target dogrulanmadan use case'e gecirilmemelidir; stabil domain ID kullan.
+
+## Example
+
+```csharp
+// BAD: Button callback dogrudan state mutate ediyor
+public void OnUpgradeClicked()
+{
+    _state.Money -= 100;
+}
+
+// GOOD: Input intent use case/presenter akisine tasinir
+public void OnUpgradeClicked()
+{
+    _presenter.RequestBuyUpgrade(_upgradeId);
+}
+```

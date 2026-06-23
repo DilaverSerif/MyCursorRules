@@ -1,0 +1,31 @@
+---
+description: Scene referans guvenligi ve fail-fast dogrulama
+alwaysApply: true
+---
+
+# Scene Reference Safety
+
+- Kritik `[SerializeField]` referanslari `Awake`/`Start` basinda toplu dogrula; eksik wiring'i sessiz null-check zinciriyle gizleme.
+- Eksik scene referansinda baglamli `Debug.LogError` uret ve component akisini guvenli sekilde durdur; bozuk state ile devam etme.
+- Editor'de authoring hatalarini erken yakalamak icin uygun yerde `OnValidate` veya editor tooling dogrulamasi kullan.
+- Runtime'da eksik referansi otomatik `Find` ile yamamaya calisma; asil duzeltme scene/prefab wiring veya DI kaydinda yapilir.
+- Opsiyonel referans ile zorunlu referansi ayir; zorunlu alanlar isim, owner object ve beklenen rol bilgisini log mesajinda tasisin.
+- Toplu scene/tool degisikliklerinde `Undo`, `SetDirty` ve save akisi korunarak referans duzeltmesi idempotent yapilsin.
+
+## Example
+
+```csharp
+// BAD: Eksik referans sessizce geciliyor
+if (_moneyText != null)
+{
+    _moneyText.text = "0";
+}
+
+// GOOD: Zorunlu referans fail-fast dogrulaniyor
+if (_moneyText == null)
+{
+    Debug.LogError("UIManager icinde _moneyText referansi eksik.");
+    enabled = false;
+    return;
+}
+```

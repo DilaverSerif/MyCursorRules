@@ -1,0 +1,29 @@
+---
+description: Yeni sistemlerin setup gereksinimlerini Project Setup penceresine yansıt
+alwaysApply: true
+---
+
+# Unity Project Setup Window Coverage
+
+- Projeye yeni bir sistem eklendiğinde (SDK, servis, feature, bootstrap akışı), bu sistemin çalışması için gereken dosya/ayarlar değerlendirilmeli.
+- Eğer sistemin bir ayar dosyası, config asset’i, kimlik bilgisi dosyası veya zorunlu setup adımı varsa, `ProjectSetupEditorWindow` içinde yeni bir requirement kalemi eklenmeli.
+- Requirement kalemi en az şu davranışları sağlamalı:
+  - Durum kontrolü (`Evaluate`) ile yeşil/kırmızı görünürlük
+  - Genişleyen panelde kısa açıklama + gerekli alanları doldurma
+  - Mümkünse `Ping` / `RevealInFinder` ile hızlı erişim
+- Yeni sistem eklendiğinde, setup penceresi güncellenmeden iş “tamamlandı” sayılmaz.
+- Dosya tabanlı requirement’larda sabit beklenen path açıkça belirtilmeli.
+
+## Example
+
+```csharp
+// ❌ BAD: Yeni ödeme sistemi eklendi ama setup penceresinde görünmüyor
+// PaymentConfig.asset zorunlu olmasına rağmen Project Setup kontrolü yok.
+
+// ✅ GOOD: Yeni requirement eklenir ve setup görünür hale gelir
+_requirements = new IProjectSetupRequirement[]
+{
+    new PaymentConfigSetupRequirement(),
+    // ... mevcut kalemler
+};
+```

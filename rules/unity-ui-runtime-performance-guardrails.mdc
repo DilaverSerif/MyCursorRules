@@ -1,0 +1,32 @@
+---
+description: UI runtime performans guardrail'leri
+globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs
+alwaysApply: false
+---
+
+# UI Runtime Performance Guardrails
+
+- `Update`/`LateUpdate` icinde tekrar eden `Find*`, `GetComponent*`, `new List`, `string` birlestirme veya pahali layout hesaplarini calistirma; referans ve hesap sonucunu cache'le.
+- UI refresh'i her frame degil, state degisince veya dirty-flag/event geldikce yap; "surekli redraw" varsayimini kabul etme.
+- `MonoBehaviour` icinde her frame panel build etme, child yaratma/silme veya `SetActive` spam'i uretme; layout authoring editor/scene tarafinda kalmali.
+- `Canvas.ForceUpdateCanvases`, `LayoutRebuilder`, `ContentSizeFitter` gibi pahali akislari gerekce olmadan zincirleme cagirma.
+- Siklikla guncellenen text/ikon alanlarinda eski degeri tutup yalnizca degisim varsa UI'yi yaz; alloc ve rebuild baskisini dusur.
+- Perf icin gizli state duplication yapma; optimizasyon state sahibi `GameState` veya presenter contract'i bozmayacak sekilde uygulanmali.
+
+## Example
+
+```csharp
+// BAD: Her frame yeni string ve refresh
+private void Update()
+{
+    _moneyText.text = $"Coins: {_gameState.Money:F0}";
+    _panel.Refresh(_gameState);
+}
+
+// GOOD: Sadece degisimde yaz
+if (!Mathf.Approximately(_lastMoney, _gameState.Money))
+{
+    _lastMoney = _gameState.Money;
+    _moneyText.text = _lastMoney.ToString("F0");
+}
+```

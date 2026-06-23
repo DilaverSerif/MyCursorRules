@@ -1,0 +1,41 @@
+---
+description: Uygulama seviyesi bootstrap ve service init scriptlerinde MonoBehaviour kullanımını engeller
+alwaysApply: true
+---
+
+# Uygulama Seviyesi Bootstrap Kuralı
+
+- Uygulama seviyesinde bootstrap, composition ve service initialization yapan scriptler `MonoBehaviour` olmamalı; plain C# class olarak yazılmalı.
+- `MonoBehaviour` yalnızca scene object davranışı, view adapter veya Unity lifecycle sınırı gereken durumlarda kullanılmalı.
+- Bootstrap akışı `Bootstrap`/composition root içinde kalmalı; runtime init sırasında `Find*`, service locator veya scene lookup ile bağımlılık toplama yapılmamalı.
+- Service ve use case bağımlılıkları constructor injection ile verilmelidir; init kodu scene objesi yaşam döngüsüne bağlanmamalı.
+- Bir script hem initialization orchestration yapıyor hem scene davranışı taşıyorsa sorumluluğu ayır: init kısmını plain C# servise, scene kısmını adapter `MonoBehaviour` katmanına taşı.
+
+## Example
+
+```csharp
+// ❌ BAD: Uygulama init orkestrasyonu MonoBehaviour içinde
+public sealed class AppBootstrapInitializer : MonoBehaviour
+{
+    [SerializeField] private GameConfig _config;
+
+    private void Awake()
+    {
+        var saveService = FindAnyObjectByType<SaveService>();
+        new AppBootstrapService(_config, saveService).Initialize();
+    }
+}
+
+// ✅ GOOD: Init plain C# bootstrap servisine taşınır
+public sealed class AppBootstrapService
+{
+    private readonly GameConfig _config;
+    private readonly ISaveService _saveService;
+
+    public AppBootstrapService(GameConfig config, ISaveService saveService)
+    {
+        _config = config;
+        _saveService = saveService;
+    }
+}
+```

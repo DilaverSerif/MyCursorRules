@@ -1,0 +1,30 @@
+---
+description: Save migration, fallback ve gorunur hata politikasi
+globs: Assets/Game/Infrastructure/**/*.cs, Assets/Game/**/*Save*.cs, Assets/Game/**/*Persistence*.cs, Assets/Game/Tests/Editor/*Save*.cs, Assets/Game/Tests/Editor/*Migration*.cs
+alwaysApply: false
+---
+
+# Save Migration Policy
+
+- Save root modelinde `version` ve UTC timestamp zorunlu; yeni alan eklemek migration ihtimalini acikca hesaba katsin.
+- Save schema degisince "eski veriyi nasil upgrade edecegim?" sorusu cevaplanmadan format degisikligini tamamlanmis sayma.
+- Migration adimlari deterministik ve tekrar calistirilabilir olsun; ayni save birden fazla kez acildiginda veri bozulmasi uretme.
+- Bozuk veya eksik save'de sessiz fallback yapma; baglamli `Debug.LogWarning`/`Debug.LogError` uret ve hangi version'dan geldigini logla.
+- Recoverable durumda guvenli default veya yeni save bootstrap akisini sec; recover edilemeyen durumda cagirana failure sonucu don.
+- Migration davranisi en az bir eski-version fixture veya DTO ornegi ile testlenmeli; sadece "happy path" save acilisi yeterli sayilmaz.
+
+## Example
+
+```csharp
+// BAD: Version yok, parse hatasi sessizce yutuluyor
+catch
+{
+    return new SaveData();
+}
+
+// GOOD: Version tabanli migration karari
+if (save.Version < CurrentVersion)
+{
+    save = _migrationService.Upgrade(save);
+}
+```

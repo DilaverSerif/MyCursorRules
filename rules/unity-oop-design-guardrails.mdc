@@ -1,0 +1,98 @@
+---
+description: Unity Clean Architecture içinde OOP sınıf tasarımı, sorumluluk ve kalıtım guardrail kuralları
+alwaysApply: true
+---
+
+# Unity OOP Design Guardrails
+
+- OOP kuralları katman mimarisinin yerine geçmez; sınıfların iç tasarımını, sorumluluk sınırlarını ve bağımlılık biçimini netleştirir.
+- Gameplay davranışında inheritance yerine composition tercih et; ortak davranışı servis, policy, strategy veya value object olarak ayır.
+- Derin inheritance hiyerarşileri oluşturma; `BaseManager`, `BaseView`, `BaseEnemy`, `BasePopup` gibi çok sorumluluk taşıyan base class'lardan kaçın.
+- Inheritance yalnızca stabil framework soyutlamaları, Unity zorunlulukları veya gerçekten ortak ve dar davranış için kullanılmalı.
+- Domain/Application modellerinde public mutable field kullanma; invariant'ları constructor, factory veya açık mutation metotlarıyla koru.
+- Presentation veya Infrastructure, domain state'i doğrudan mutate etmemeli; state değişimi UseCase/Application service üzerinden yapılmalı.
+- Domain/Application collection'ları dışarıya read-only view olarak aç; mutation gerekiyorsa niyeti belli metotlar kullan.
+- Interface'i otomatik olarak her class için oluşturma; interface consumer tarafında, port/test seam/replaceable policy/cross-layer boundary gerektiğinde tanımlanmalı.
+- Interface'leri küçük, davranış odaklı ve Unity type sızıntısından arınmış tut.
+- Bir class'ın tek ana değişme sebebi olmalı; orchestration, persistence, UI rendering, asset loading, analytics ve gameplay mutation aynı class'ta birleşmemeli.
+- God service, god manager, god presenter veya belirsiz `Helper/Util/System/Handler` sınıfları oluşturma.
+- Büyümesi beklenen feature/item/enemy/reward varyantlarında dev switch/if zinciri yerine policy, strategy, polymorphism veya data-driven config tercih et.
+- Küçük lokal condition'lar kabul edilebilir; trivial branch için gereksiz abstraction veya inheritance ekleme.
+- Plain C# class'lar zorunlu bağımlılıklarını constructor üzerinden almalı; service locator, static singleton veya gizli global state kullanmamalı.
+- Constructor yalnızca dependency atama ve invariant validation yapmalı; IO, asset loading, event subscription, async work veya gameplay side effect başlatmamalı.
+- `MonoBehaviour` serialized reference kullanabilir; bu esneklik yalnızca Presentation/Adapter boundary içinde kalmalı.
+- Static method yalnızca pure helper/value calculation için kabul edilebilir; runtime state, scene object, service veya config erişimi static üzerinden yapılmamalı.
+- Sınıf adı sorumluluğunu açıkça anlatmalı; isim belirsizse sınıf muhtemelen fazla geniştir.
+
+## Example
+
+```csharp
+// ❌ BAD: Derin inheritance ve optional davranış taşıyan base class
+public abstract class BaseEnemy : MonoBehaviour
+{
+    public int Health;
+    public bool CanFly;
+    public bool CanExplode;
+    public bool DropsLoot;
+
+    public virtual void Attack() { }
+    public virtual void Fly() { }
+    public virtual void Explode() { }
+    public virtual void DropLoot() { }
+}
+
+// ✅ GOOD: Davranışlar dar sorumluluklu policy/service olarak compose edilir
+public sealed class EnemyCombatController
+{
+    private readonly IAttackPolicy _attackPolicy;
+    private readonly IDamagePolicy _damagePolicy;
+
+    public EnemyCombatController(IAttackPolicy attackPolicy, IDamagePolicy damagePolicy)
+    {
+        _attackPolicy = attackPolicy;
+        _damagePolicy = damagePolicy;
+    }
+
+    public DamageResult Attack(EnemyState enemy, TargetState target)
+    {
+        var attack = _attackPolicy.CreateAttack(enemy, target);
+        return _damagePolicy.Apply(target, attack);
+    }
+}
+```
+
+```csharp
+// ❌ BAD: Domain state dışarıdan doğrudan mutate ediliyor
+public sealed class WalletState
+{
+    public int Coins;
+}
+
+_wallet.Coins -= price;
+
+// ✅ GOOD: Invariant state içinde korunuyor
+public sealed class WalletState
+{
+    public int Coins { get; private set; }
+
+    public WalletState(int coins)
+    {
+        if (coins < 0)
+            throw new ArgumentOutOfRangeException(nameof(coins));
+
+        Coins = coins;
+    }
+
+    public bool TrySpend(int amount)
+    {
+        if (amount <= 0)
+            return false;
+
+        if (Coins < amount)
+            return false;
+
+        Coins -= amount;
+        return true;
+    }
+}
+```

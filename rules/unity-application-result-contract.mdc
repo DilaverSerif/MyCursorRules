@@ -1,0 +1,39 @@
+---
+description: Application use case sonuc, failure ve hata sozlesmesi standardi
+alwaysApply: true
+---
+
+# Application Result Contract
+
+- `UseCase` ve application service metotlari gameplay sonucu uretiyorsa exception firlatmak yerine `Result`, `Result<T>` veya domain'e ait acik failure modeli dondurmelidir.
+- Validation failure, insufficient resource, missing entity, locked feature veya invalid command gibi beklenen akislar exception degildir.
+- Exception yalnizca bozuk invariant, beklenmeyen IO/serialization, iptal edilmemis lifecycle hatasi veya programlama hatasi icin kullanilir.
+- Presentation katmani raw string hata uretmemeli; stabil error code/result alip UI/localization mapping yapmalidir.
+- Failure result icinde stabil error code, mumkunse ilgili entity/config ID'si ve loglamaya yardimci olacak baglam bulunmalidir.
+- Use case sonucu state mutation yapmissa success/failure ayrimi deterministik olmali; failure durumunda yari-mutated state birakilmamalidir.
+- Log mesaji kullaniciya gosterilen hata metni degildir; result code ve log context ayri dusunulmelidir.
+
+## Example
+
+```csharp
+// BAD: Beklenen gameplay failure exception ile tasiniyor
+public void BuyUpgrade(string upgradeId)
+{
+    if (_state.Money < price)
+    {
+        throw new InvalidOperationException("Not enough money");
+    }
+}
+
+// GOOD: Beklenen failure acik Result sozlesmesiyle doner
+public Result BuyUpgrade(string upgradeId)
+{
+    if (_state.Money < price)
+    {
+        return Result.Failure(UpgradeErrors.InsufficientMoney, upgradeId);
+    }
+
+    _state.Money -= price;
+    return Result.Success();
+}
+```

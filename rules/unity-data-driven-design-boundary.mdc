@@ -1,0 +1,77 @@
+---
+description: Unity Clean Architecture içinde data-driven tasarım, config ve authoring data sınırları
+alwaysApply: true
+---
+
+# Unity Data-Driven Design Boundary
+
+- Tuning değerleri, economy price, spawn table, reward table, duration, threshold ve designer-editable içerik config/data üzerinden gelmeli.
+- Kritik invariant, güvenlik kuralı ve gameplay bütünlüğü yalnızca authoring data'ya bırakılmamalı; Domain/Application içinde doğrulanmalı.
+- Magic number kullanma; sayıların niyeti config, constant, value object veya policy adıyla görünür olmalı.
+- Runtime state ile authoring/config data ayrılmalı; ScriptableObject veya config asset runtime mutable state deposu olarak kullanılmamalı.
+- Config load eden kod ile config tüketen gameplay logic ayrılmalı.
+- Application validated config contract tüketmeli; raw ScriptableObject, JSON DTO veya Addressables key bilmemeli.
+- Config validation editor-time ve startup-time aşamalarında yapılmalı; missing/invalid config sessiz fallback ile gizlenmemeli.
+- Fallback değerleri explicit ve testli olmalı; “0”, empty string veya null üzerinden davranış üretme.
+- Designer-editable data yeni varyant eklemeyi kolaylaştırmalı ama code-level invariant'ları bypass etmemeli.
+- Config schema değişiklikleri migration/versioning veya backward-compatible adapter ile ele alınmalı.
+- Feature config'leri mümkün olduğunca feature/module sınırı içinde tutulmalı; global config dosyası god object'e dönüşmemeli.
+- Data-driven branch gerekiyorsa config modelinde açık type/kind/policy alanları kullan; string compare ile gameplay davranışı seçme.
+- Runtime hot-reload destekleniyorsa eski subscription/state temizliği ve validation sonucu açık yönetilmeli.
+- Config değerleri UI display metni, localization key ve gameplay id rollerini aynı anda taşımamalı.
+
+## Example
+
+```csharp
+// ❌ BAD: Magic number ve raw config yok
+public bool CanBuy(PlayerState player)
+{
+    return player.Level >= 7 && player.Coins >= 250;
+}
+
+// ✅ GOOD: Validated config contract ve domain policy kullanımı
+public sealed class PurchaseRequirement
+{
+    public int RequiredLevel { get; }
+    public CurrencyAmount Price { get; }
+
+    public PurchaseRequirement(int requiredLevel, CurrencyAmount price)
+    {
+        if (requiredLevel < 0) throw new ArgumentOutOfRangeException(nameof(requiredLevel));
+        if (price.Amount < 0) throw new ArgumentOutOfRangeException(nameof(price));
+
+        RequiredLevel = requiredLevel;
+        Price = price;
+    }
+}
+
+public sealed class PurchaseEligibilityPolicy
+{
+    public bool CanBuy(PlayerState player, PurchaseRequirement requirement)
+    {
+        return player.Level >= requirement.RequiredLevel &&
+               player.Wallet.CanSpend(requirement.Price);
+    }
+}
+```
+
+```csharp
+// ❌ BAD: ScriptableObject runtime state deposuna dönüşüyor
+[CreateAssetMenu]
+public sealed class WalletConfig : ScriptableObject
+{
+    public int StartingCoins;
+    public int CurrentCoins; // runtime mutable state olmamalı
+}
+
+// ✅ GOOD: Config immutable authoring input, runtime state ayrı modelde
+public sealed class WalletInitialConfig
+{
+    public int StartingCoins { get; }
+}
+
+public sealed class WalletState
+{
+    public int Coins { get; private set; }
+}
+```

@@ -1,0 +1,32 @@
+---
+description: Katmanlara gore sinif, dosya ve rol isimlendirme standartlari
+alwaysApply: true
+---
+
+# Layer Naming Conventions
+
+- Domain modelleri `*State`, `*Entity`, `*Rule`, `*Policy`, `*Value`, `*Snapshot` gibi sorumluluk belirten adlar tasimalidir.
+- Application davranislari `*UseCase`, `*Service`, `*Query`, `*Command`, `*CommandHandler` gibi acik rol adi ile bitmelidir.
+- Presentation Unity boundary siniflari `*View`, `*ViewAdapter`, `*Screen`, `*Panel`, `*Binder` gibi adlandirilmalidir.
+- Plain presentation orchestration siniflari `*Presenter` veya `*Controller` olmalidir; `Manager` adi yeni kodda kullanilmamalidir.
+- `System`, `Helper`, `Util`, `Manager`, `Handler` gibi belirsiz adlar gerekcesiz kullanilmamalidir; kullaniliyorsa sorumluluk daha spesifik hale getirilmelidir.
+- Dosya adi ust seviye type adi ile ayni olmalidir; tek dosyada tek ust seviye type kuralini bozma.
+- Klasor adi katman/feature amacini gostermelidir; `Misc`, `Common`, `Temp`, `New`, `Scripts` gibi belirsiz klasorler acma.
+
+## Example
+
+```csharp
+// BAD: Rol belirsiz
+public sealed class UpgradeManager
+{
+}
+
+// GOOD: Rol ve katman net
+public sealed class BuyUpgradeUseCase
+{
+}
+
+public sealed class UpgradePanelPresenter
+{
+}
+```

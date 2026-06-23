@@ -1,0 +1,37 @@
+---
+description: Event, async ve yaşam döngüsü güvenlik kuralları
+alwaysApply: true
+---
+
+# Event And Async Safety
+
+- Akış sırası `validate -> mutate state -> publish event -> return` şeklinde olmalı.
+- `EventBus` command veya orchestration yerine kullanılmamalı; karar ve mutation `UseCase`/application service içinde kalmalı, event yalnızca olmuş sonucu bildirmeli.
+- Event payload'ları data-only olmalı; yeni event'lerde mümkünse `readonly struct` tercih et.
+- Gameplay async akışlarında `Task`/`Task.Run` yerine `UniTask` kullan.
+- `async Awake`, `async Start`, `async OnEnable` gibi lifecycle callback imzaları kullanma.
+- Lifecycle callback sync kalsın; async ihtiyaç varsa callback içinden `CancellationToken` alan `UniTask` metoda delegasyon yap.
+- Bir frame'den uzun süren akışlar `CancellationToken` kabul etmeli veya mevcut token'ı kullanmalı.
+- Uzun yaşayan servis/controller kapanışında sırayı koru: `subscriptions dispose -> token cancel -> resource dispose`.
+- `async void` genel olarak yasak; yalnızca Unity callback sınırında fire-and-forget zorunluluğu varsa istisna kabul edilir.
+
+## Example
+
+```csharp
+// BAD: Lifecycle callback async imza ile calisiyor
+private async void Awake()
+{
+    await InitializeAsync();
+}
+
+// GOOD: Callback sync kalir, UniTask akis token ile yonetilir
+private void Awake()
+{
+    _ = InitializeAsync(this.GetCancellationTokenOnDestroy());
+}
+
+private async UniTask InitializeAsync(CancellationToken cancellationToken)
+{
+    await _bootstrapUseCase.ExecuteAsync(cancellationToken);
+}
+```

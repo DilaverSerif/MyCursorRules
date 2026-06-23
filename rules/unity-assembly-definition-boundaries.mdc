@@ -1,0 +1,30 @@
+---
+description: Assembly definition sinirlari ve layer izolasyonu
+alwaysApply: true
+---
+
+# Assembly Definition Boundaries
+
+- `Editor` kodu editor-only assembly icinde kalmali; runtime assembly'lere `UnityEditor` veya editor tool bagimliligi sizdirma.
+- `Domain` assembly/reference seti `UnityEngine`, `UnityEditor`, scene object ve infrastructure implementasyonlarini alamaz.
+- `Application` runtime logic'i `Domain` + ortak contract katmanlarina baglanir; `Presentation` veya `Editor` assembly referansi ekleme.
+- `Application` altindaki `ScriptableObject` config authoring tipleri UnityEngine'e baglanabilir; bu istisna scene object, `MonoBehaviour`, IO veya presentation bagimliligi tasimaz.
+- Test assembly'leri yalnizca test ettigi katman, gerekli test framework'u ve acik runtime contract'larini referanslasin; tum projeyi blanket referanslama.
+- Yeni feature eklerken `asmdef` bagimlilik yonu `Domain <- Application <- Presentation` disina tasiyorsa once mimariyi duzelt, sonra referansi ekle.
+- `asmdef` yoksa yeni assembly eklemeden once ayirim gercekten gerekli mi diye sorgula; gecici hiz icin katman ihlali yapma.
+
+## Example
+
+```csharp
+// BAD: Domain assembly Unity bagimliligi aliyor
+using UnityEngine;
+
+public sealed class OrderRuleDebugger
+{
+}
+
+// GOOD: Domain saf kalir, editor ihtiyaci editor assembly'de cozulur
+public sealed class OrderRule
+{
+}
+```

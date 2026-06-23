@@ -1,0 +1,24 @@
+---
+description: Localization, kullanici metni ve sayi/tarih formatlama sinirlari
+globs: Assets/Game/Domain/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Presentation/**/*.cs
+alwaysApply: false
+---
+
+# Localization And Text Formatting Boundary
+
+- `Domain` ve `Application` kullaniciya gosterilecek literal UI metni uretmemelidir.
+- Use case result/error code dondurur; lokalize metin Presentation veya Localization adapter tarafinda uretilir.
+- Para, sure, sayi, yuzde ve tarih formatlama UI/localization katmaninda yapilir; domain string formatlamaz.
+- Localization key'leri stabil ID olmalidir; hierarchy path, enum display name veya raw string uzerinden davranis baglama yapma.
+- Log mesaji, debug aciklamasi ve kullanici metni ayri contract'lardir; biri digerinin yerine kullanilmaz.
+- UI metni config'ten geliyorsa config authoring kaynagi olarak kalir; gameplay kuralini metin anahtarina baglama.
+
+## Example
+
+```csharp
+// BAD: Application kullanici metni formatliyor
+return Result.Failure($"You need {price - money} more coins.");
+
+// GOOD: Application code/context dondurur, UI lokalize eder
+return Result.Failure(StoreErrors.InsufficientCoins, new { MissingCoins = price - money });
+```

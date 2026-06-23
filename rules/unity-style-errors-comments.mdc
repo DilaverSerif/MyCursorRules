@@ -1,0 +1,29 @@
+---
+description: İsimlendirme, hata yönetimi ve yorum dili standartları
+alwaysApply: true
+---
+
+# Style, Errors, And Comments
+
+- İsimlendirme: type/public member/file için `PascalCase`, private field için `_camelCase`, local/param için `camelCase`.
+- Tek dosyada tek üst seviye type kuralını koru.
+- `catch { }` gibi sessiz hata yutma yapma; recoverable durumda `Debug.LogWarning`, bozuk akışta `Debug.LogError` kullan.
+- Hot loop içinde log spam üretme; log mesajlarına ID veya state bilgisi ekle.
+- Yorum ve XML doc metinlerini Türkçe yaz; kod sembollerini İngilizce bırak.
+- Açıklama yorumlarını sadece "neden/invariant/lifetime/riskli akış" için ekle.
+
+## Example
+
+```csharp
+// ❌ BAD
+catch
+{
+}
+
+// ✅ GOOD
+catch (Exception ex)
+{
+    Debug.LogError($"Order save failed. orderId={orderId} reason={ex.Message}");
+    return Result.Failure("Order save failed.");
+}
+```

@@ -1,0 +1,31 @@
+---
+description: Runtime Instantiate/Destroy, factory ve pooling yasam dongusu kurallari
+globs: Assets/Game/Presentation/**/*.cs, Assets/Game/Application/**/*.cs, Assets/Game/Infrastructure/**/*.cs
+alwaysApply: false
+---
+
+# Runtime Instantiation And Pooling
+
+- Sik olusturulan runtime objelerde `Instantiate`/`Destroy` spam'i yapma; pool veya factory kullan.
+- Factory/Application spawn karari verebilir; concrete prefab instantiate isi Unity boundary, Infrastructure veya Presentation adapter icinde kalir.
+- Pool'dan cikan objeler explicit `Initialize`/`Bind`, havuza donerken explicit `Reset`/`Dispose` akisina sahip olmalidir.
+- Pooled objeler eski event subscription, tween, coroutine, async task veya cancellation token tasimamali.
+- Pool optimizasyonu gameplay state sahipligini degistirmemeli; obje yasam dongusu ile domain entity yasam dongusu karistirilmamalidir.
+- Pool kullanilmayan tekil objelerde de instantiate yeri merkezi olmali; rastgele view/controller icinde prefab lifecycle dagitma.
+- Destroy yerine disable/pool kullaniliyorsa `OnDisable` yan etkilerinin gameplay state'i bozmadigini test et.
+
+## Example
+
+```csharp
+// BAD: Her refresh'te child yok edip yeniden uretiyor
+foreach (Transform child in _content)
+{
+    Destroy(child.gameObject);
+}
+Instantiate(_rowPrefab, _content).GetComponent<OrderRowView>().Bind(order);
+
+// GOOD: Row pool reset/bind akisi ile kullaniliyor
+var row = _rowPool.Get();
+row.Bind(order);
+_activeRows.Add(row);
+```
