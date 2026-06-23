@@ -1,0 +1,34 @@
+---
+description: Require Unity UI Toolkit screens to use the project DesignSystem
+globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*.uxml, Assets/Game/Presentation/**/*.uss, Assets/Game/**/*Menu*.cs, Assets/Game/**/*Screen*.cs, Assets/Game/**/*Panel*.cs
+alwaysApply: false
+---
+
+# Unity UI Toolkit DesignSystem
+
+- New menus, panels, HUDs, overlays, navigation, and runtime UI screens must be built with UI Toolkit using `UIDocument`, UXML, and USS.
+- Every new screen root must use the `ds-root` class and attach the project's `DesignSystem.uss` stylesheet.
+- Do not reference this rules repository as a design system asset source; the design system assets must live inside the target Unity project.
+- Use existing `ds-*` component classes for buttons, inputs, cards, modals, drawers, tabs, badges, navigation, icons, feedback, and common controls.
+- Use DesignSystem tokens for color, spacing, radius, typography, borders, and motion; do not hard-code one-off visual values in feature USS.
+- Feature USS is allowed only for feature-specific layout or a component that does not exist in the DesignSystem yet.
+- If the DesignSystem is missing a required visual pattern, extend the project's DesignSystem first instead of recreating a local lookalike in a feature folder.
+- Runtime UI code may bind view models, refresh state, toggle classes, apply visibility/animation state, and emit input intent; it must not make gameplay, economy, reward, or progression decisions.
+- Keep `VisualElement`, `Q`, `Query`, and UI Toolkit callbacks inside `Presentation`; `Domain` and pure `Application` must not know UI Toolkit types.
+- Use stable ids, localization keys, or view model fields for UI content; do not bind behavior to UXML hierarchy indexes, sibling order, display text, or icon names.
+
+## Example
+
+```xml
+<!-- GOOD: screen root uses the project DesignSystem -->
+<ui:VisualElement class="ds-root inventory-screen">
+  <ui:Button name="buy-button" class="ds-btn ds-btn--primary" text="Buy" />
+</ui:VisualElement>
+```
+
+```csharp
+// GOOD: Presentation emits intent and toggles visual state.
+var buyButton = root.Q<Button>("buy-button");
+buyButton.clicked += () => _presenter.RequestBuySelectedItem();
+buyButton.Enable(_presenter.CanBuySelectedItem);
+```

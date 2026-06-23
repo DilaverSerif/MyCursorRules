@@ -1,32 +1,35 @@
 ---
-description: UI runtime performance guardrails
-globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs
+description: UI Toolkit runtime performance guardrails
+globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*.uxml, Assets/Game/Presentation/**/*.uss, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs
 alwaysApply: false
 ---
 
 # UI Runtime Performance Guardrails
 
-- Do not run repeated `Find*`, `GetComponent*`, `new List`, string concatenation, or expensive layout calculations inside `Update`/`LateUpdate`; cache references and computed results.
+- Do not run repeated `Find*`, `GetComponent*`, `Q`, `Query`, `new List`, string concatenation, or expensive layout calculations inside `Update`/`LateUpdate`; cache references and computed results.
 - Refresh UI on state changes, dirty flags, or events, not every frame; reject the assumption that redraw must be continuous.
-- Do not build panels every frame, create/delete children, or spam `SetActive` inside `MonoBehaviour`; layout authoring should stay in editor/scene setup.
-- Do not chain expensive flows such as `Canvas.ForceUpdateCanvases`, `LayoutRebuilder`, and `ContentSizeFitter` without a clear reason.
+- Do not rebuild UI Toolkit visual trees every frame, repeatedly create/delete children, or continuously write inline `style` values; use UXML structure, cached elements, and class toggles.
+- Prefer `AddToClassList`, `RemoveFromClassList`, and `EnableInClassList` for visual state; avoid style churn when a USS class can express the state.
+- Legacy uGUI exceptions must be explicit; do not chain expensive flows such as `Canvas.ForceUpdateCanvases`, `LayoutRebuilder`, `ContentSizeFitter`, or repeated `SetActive` without a clear reason.
 - For frequently updated text/icon fields, keep the previous value and write to UI only when the value changes to reduce allocations and rebuilds.
 - Do not duplicate hidden state for performance; optimization must not break the owning `GameState` or presenter contract.
 
 ## Example
 
 ```csharp
-// BAD: New string and refresh every frame
+// BAD: Visual tree query, new string, and refresh every frame.
 private void Update()
 {
-    _moneyText.text = $"Coins: {_gameState.Money:F0}";
-    _panel.Refresh(_gameState);
+    root.Q<Label>("money-label").text = $"Coins: {_gameState.Money:F0}";
+    root.Q("inventory-panel").EnableInClassList("is-open", _state.IsInventoryOpen);
 }
 
-// GOOD: Write only when the value changes
-if (!Mathf.Approximately(_lastMoney, _gameState.Money))
+// GOOD: Cache elements and write only when values change.
+if (_lastMoney != _gameState.Money)
 {
     _lastMoney = _gameState.Money;
     _moneyText.text = _lastMoney.ToString("F0");
 }
+
+_inventoryPanel.EnableInClassList("is-open", _state.IsInventoryOpen);
 ```

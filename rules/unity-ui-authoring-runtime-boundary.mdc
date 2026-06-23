@@ -1,26 +1,31 @@
 ---
-description: Keep UI authoring in editor and runtime behavior in presenters
-globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs, Assets/Game/Editor/**/*Menu*.cs, Assets/Game/Editor/**/*Ui*.cs
+description: Keep UI Toolkit authoring in UXML/USS and runtime behavior in presenters
+globs: Assets/Game/Presentation/UI/**/*.cs, Assets/Game/Presentation/**/*.uxml, Assets/Game/Presentation/**/*.uss, Assets/Game/Presentation/**/*View*.cs, Assets/Game/Presentation/**/*Presenter*.cs, Assets/Game/Presentation/**/*Controller*.cs, Assets/Game/Editor/**/*Menu*.cs, Assets/Game/Editor/**/*Ui*.cs
 alwaysApply: false
 ---
 
 # UI Authoring Runtime Boundary
 
-- Keep runtime code that builds persistent panel/row hierarchies under `Presentation/UI` to a minimum; persistent structure should be produced by `UIScene` or editor tools.
-- Classes such as `UIManager` should stay in an orchestration role; as they grow, split flow across `View + Presenter + Controller` boundaries.
-- If UI `*Controller : MonoBehaviour` classes grow, move Unity-boundary code into `*View` and service/use case orchestration into a plain C# `*Controller` or `*Presenter`.
-- Runtime code should only perform `data bind`, `state refresh`, `visibility/tween`, and input emission; do not add gameplay decisions or price/economy rules there.
+- Author persistent UI structure with UI Toolkit UXML, `UIDocument`, and USS; do not build large persistent panel/row hierarchies imperatively at runtime.
+- Runtime template cloning is allowed for repeated rows, cards, list items, and feature-owned dynamic content; clone, bind, and cache instead of rebuilding the whole screen.
+- Screen, view, presenter, and controller classes should keep clear boundaries: `View` owns `VisualElement` references and UI Toolkit callbacks, while plain C# `Presenter`/`Controller` orchestrates view models and use case calls.
+- If UI `*Controller : MonoBehaviour` classes grow, move UI Toolkit boundary code into `*View` and service/use case orchestration into a plain C# `*Controller` or `*Presenter`.
+- Runtime code should only perform data bind, state refresh, class toggles, visibility/tween, and input emission; do not add gameplay decisions or price/economy rules there.
 - If UI runtime reads config, use it for display text, icons, colors, ordering, or layout; purchase/reward/price decisions belong to a use case or application service.
-- When a new UI feature adds runtime behavior or presenter logic, add presenter-level tests first, then change scene wiring.
+- When a new UI feature adds runtime behavior or presenter logic, add presenter-level tests first, then change `UIDocument`/scene wiring.
 - UI text/color/icon keys should be stable IDs or config; do not bind behavior to hierarchy indexes or sibling order.
 
 ## Example
 
 ```csharp
-// BAD: Runtime builds the whole panel and adds a business rule
-if (playerLevel > 3) { CreateUpgradePanel(); _gameState.Money -= 100; }
+// BAD: Runtime builds the whole screen and adds a business rule.
+if (playerLevel > 3)
+{
+    root.Add(CreateUpgradePanel());
+    _gameState.Money -= 100;
+}
 
-// GOOD: Runtime only applies view data
-var layout = _upgradePresenter.BuildLayout(_gameState, _pricingConfig);
-_upgradeView.Apply(layout);
+// GOOD: UXML owns structure; runtime only binds view data and emits intent.
+var viewModel = _upgradePresenter.BuildLayout(_gameState, _pricingConfig);
+_upgradeView.Apply(viewModel);
 ```
